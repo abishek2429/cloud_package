@@ -1,0 +1,31 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: zone-node
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:traffic-db}:${DB_PORT:5432}/${DB_NAME:traffic_monitoring}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:traffic_admin}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:traffic_secret}}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    open-in-view: false
+
+zone:
+  id: ${ZONE_ID:NORTH}
+  name: ${ZONE_NAME:North Zone}
+
+logging:
+  level:
+    root: INFO
+    com.traffic: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [Zone: ${zone.id:UNKNOWN}] %msg%n"

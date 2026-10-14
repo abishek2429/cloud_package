@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: coordinator-service-test
+
+coordinator:
+  http:
+    connect-timeout-ms: 1000
+    read-timeout-ms: 1000
+  health-check:
+    enabled: false # disable scheduled polling in unit test suite
+    interval-ms: 60000
+    timeout-ms: 1000
+    failure-threshold: 1
+    success-threshold: 1
+  retry:
+    max-attempts: 3
+    initial-backoff-ms: 10 # ultra-fast test backoff
+    backoff-multiplier: 1.0
+    max-backoff-ms: 20
+  zones:
+    - id: "NORTH"
+      name: "North District"
+      url: http://localhost:8081
+    - id: "CENTRAL"
+      name: "Central District"
+      url: http://localhost:8082
+    - id: "SOUTH"
+      name: "South District"
+      url: http://localhost:8083
+
+logging:
+  level:
+    root: INFO
+    com.traffic: DEBUG

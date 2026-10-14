@@ -1,0 +1,162 @@
+services:
+  # ============================================================================
+  # Centralized PostgreSQL Database for Durable Partitioned State
+  # ============================================================================
+  traffic-db:
+    image: postgres:15-alpine
+    container_name: traffic-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-traffic_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-traffic_secret}
+      POSTGRES_DB: ${DB_NAME:-traffic_monitoring}
+    ports:
+      - "5432:5432"
+    volumes:
+      - traffic-db-data:/var/lib/postgresql/data
+      - ./zone-node/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - traffic-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-traffic_admin} -d ${DB_NAME:-traffic_monitoring}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # ============================================================================
+  # Zone Node 1: North District (Port 8081)
+  # ============================================================================
+  zone-north:
+    build:
+      context: .
+      dockerfile: zone-node/Dockerfile
+    container_name: zone-north
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - ZONE_ID=${ZONE_NORTH_ID:-NORTH}
+      - ZONE_NAME=${ZONE_NORTH_NAME:-North District}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://traffic-db:5432/${DB_NAME:-traffic_monitoring}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-traffic_admin}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-traffic_secret}
+    depends_on:
+      traffic-db:
+        condition: service_healthy
+    networks:
+      - traffic-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8081/api/health > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 12s
+
+  # ============================================================================
+  # Zone Node 2: Central District (Port 8082)
+  # ============================================================================
+  zone-central:
+    build:
+      context: .
+      dockerfile: zone-node/Dockerfile
+    container_name: zone-central
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - ZONE_ID=${ZONE_CENTRAL_ID:-CENTRAL}
+      - ZONE_NAME=${ZONE_CENTRAL_NAME:-Central District}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://traffic-db:5432/${DB_NAME:-traffic_monitoring}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-traffic_admin}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-traffic_secret}
+    depends_on:
+      traffic-db:
+        condition: service_healthy
+    networks:
+      - traffic-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8082/api/health > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 12s
+
+  # ============================================================================
+  # Zone Node 3: South District (Port 8083)
+  # ============================================================================
+  zone-south:
+    build:
+      context: .
+      dockerfile: zone-node/Dockerfile
+    container_name: zone-south
+    ports:
+      - "8083:8083"
+    environment:
+      - SERVER_PORT=8083
+      - ZONE_ID=${ZONE_SOUTH_ID:-SOUTH}
+      - ZONE_NAME=${ZONE_SOUTH_NAME:-South District}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://traffic-db:5432/${DB_NAME:-traffic_monitoring}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-traffic_admin}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-traffic_secret}
+    depends_on:
+      traffic-db:
+        condition: service_healthy
+    networks:
+      - traffic-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8083/api/health > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 12s
+
+  # ============================================================================
+  # Central Coordinator Service (Port 8080)
+  # ============================================================================
+  coordinator-service:
+    build:
+      context: .
+      dockerfile: coordinator-service/Dockerfile
+    container_name: coordinator-service
+    ports:
+      - "${COORDINATOR_PORT:-8080}:8080"
+    environment:
+      - SERVER_PORT=8080
+      - ZONE_NORTH_URL=${ZONE_NORTH_URL:-http://zone-north:8081}
+      - ZONE_CENTRAL_URL=${ZONE_CENTRAL_URL:-http://zone-central:8082}
+      - ZONE_SOUTH_URL=${ZONE_SOUTH_URL:-http://zone-south:8083}
+    depends_on:
+      zone-north:
+        condition: service_healthy
+      zone-central:
+        condition: service_healthy
+      zone-south:
+        condition: service_healthy
+    networks:
+      - traffic-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/coordinator/health > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+# ==============================================================================
+# Isolated Bridge Network for Distributed Service Discovery
+# ==============================================================================
+networks:
+  traffic-network:
+    name: traffic-incident-network
+    driver: bridge
+
+# ==============================================================================
+# Named Volumes for Durable Persistence Across Container Restarts
+# ==============================================================================
+volumes:
+  traffic-db-data:
+    name: traffic-incident-db-data
