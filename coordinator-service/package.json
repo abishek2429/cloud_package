@@ -1,0 +1,16 @@
+{
+  "name": "coordinator-service",
+  "version": "1.0.0",
+  "description": "Distributed Coordinator & Aggregation Service for Traffic Monitoring",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

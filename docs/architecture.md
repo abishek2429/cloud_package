@@ -1,8 +1,8 @@
-# System Architecture Documentation
+# System Architecture Documentation (Node.js Distributed Edition)
 
 ## 1. Executive Summary
 
-The **Distributed Traffic Incident Monitoring System** is a resilient, partitioned distributed backend and real-time visualization platform designed for metropolitan traffic telemetry management. Built using **Java 17**, **Spring Boot 3.2**, **Spring Data JPA**, **PostgreSQL 15**, and **React (Vite)**, the system demonstrates how enterprise distributed systems achieve high availability, graceful degradation, partition tolerance, and crash recovery.
+The **Distributed Traffic Incident Monitoring System** is a resilient, partitioned distributed backend and real-time visualization platform designed for metropolitan traffic telemetry management. Built using **Node.js 20+ (ES Modules)**, **Express.js**, **PostgreSQL 15 (pg connection pool)**, and **React 19 (Vite)**, the system demonstrates how enterprise distributed systems achieve high availability, graceful degradation, partition tolerance, and crash recovery.
 
 ---
 
@@ -18,8 +18,8 @@ flowchart TD
     end
 
     subgraph CoordinatorTier["Coordination & Aggregation Tier"]
-        Coord["coordinator-service<br/>(Spring Boot 3.2 - Port 8080)"]
-        ScatterGather["Scatter-Gather Engine<br/>(CompletableFuture)"]
+        Coord["coordinator-service<br/>(Node.js 20 / Express - Port 8080)"]
+        ScatterGather["Scatter-Gather Engine<br/>(Promise.allSettled)"]
         Hysteresis["Hysteresis Health Monitor<br/>(Failure & Recovery Thresholds: 2)"]
         RetryEngine["Bounded Retry Executor<br/>(Max 3 attempts, Exp Backoff)"]
         Coord --> ScatterGather
@@ -29,9 +29,9 @@ flowchart TD
 
     subgraph DockerNetwork["Internal Virtual Bridge Network (traffic-network)"]
         subgraph ZoneTier["Autonomous Partition Tier (zone-node)"]
-            ZN["zone-north<br/>(Port 8081 / DNS: zone-north)<br/>Zone: NORTH"]
-            ZC["zone-central<br/>(Port 8082 / DNS: zone-central)<br/>Zone: CENTRAL"]
-            ZS["zone-south<br/>(Port 8083 / DNS: zone-south)<br/>Zone: SOUTH"]
+            ZN["zone-north<br/>(Port 8081 / DNS: zone-north)<br/>Zone: NORTH (Node.js 20)"]
+            ZC["zone-central<br/>(Port 8082 / DNS: zone-central)<br/>Zone: CENTRAL (Node.js 20)"]
+            ZS["zone-south<br/>(Port 8083 / DNS: zone-south)<br/>Zone: SOUTH (Node.js 20)"]
         end
 
         subgraph StorageTier["Durable Persistence Tier (ACID Storage)"]
@@ -55,9 +55,9 @@ flowchart TD
     RetryEngine -->|HTTP POST /api/incidents| ZC
     RetryEngine -->|HTTP POST /api/incidents| ZS
 
-    ZN -->|JDBC Connection Pool| Postgres
-    ZC -->|JDBC Connection Pool| Postgres
-    ZS -->|JDBC Connection Pool| Postgres
+    ZN -->|pg Connection Pool| Postgres
+    ZC -->|pg Connection Pool| Postgres
+    ZS -->|pg Connection Pool| Postgres
 ```
 
 ---
@@ -65,25 +65,25 @@ flowchart TD
 ## 3. Component Breakdown
 
 ### 3.1. Coordinator Service (`coordinator-service`)
-- **Role**: Stateless aggregator, dispatcher, and health guardian.
+- **Technology**: Node.js 20+, Express.js, Native `fetch` with `AbortSignal.timeout()`, ES Modules.
 - **Port**: Host port `8080` (Internal container port `8080`).
 - **Core Modules**:
-  1. **Scatter-Gather Aggregator (`AggregationService.java`)**: Concurrently fans out queries to all configured zone nodes using Java `CompletableFuture` and Spring 3.2's modern `RestClient`. If any node fails or times out, it captures the error and returns partial results without terminating the request.
-  2. **Hysteresis Health Monitor (`NodeHealthMonitorService.java`)**: Runs background heartbeat probes (`@Scheduled`) every 5 seconds. To prevent rapid flapping caused by transient network glitches, it requires **2 consecutive failed probes** before marking a node `OFFLINE`, and **2 consecutive successful probes** before declaring recovery to `ONLINE`.
-  3. **Bounded Retry Executor (`BoundedRetryExecutor.java`)**: Applies bounded exponential backoff retries (default 3 attempts, 200ms initial backoff, 2.0x multiplier, capped at 1000ms) for write dispatches. Retries are strictly bounded to prevent thread starvation and cascading failures.
+  1. **Scatter-Gather Aggregator (`src/aggregator.js`)**: Concurrently fans out queries to all configured zone nodes using JavaScript `Promise.allSettled()` and native `fetch` with socket timeouts. If any node fails or times out, it captures the error and returns partial results without terminating the request.
+  2. **Hysteresis Health Monitor (`src/healthMonitor.js`)**: Runs background heartbeat probes (`setInterval`) every 5 seconds. To prevent rapid flapping caused by transient network glitches, it requires **2 consecutive failed probes** before marking a node `OFFLINE`, and **2 consecutive successful probes** before declaring recovery to `ONLINE`.
+  3. **Bounded Retry Executor (`src/retryExecutor.js`)**: Applies bounded exponential backoff retries (default 3 attempts, 200ms initial backoff, 2.0x multiplier, capped at 1000ms) for write dispatches. Retries are strictly bounded to prevent thread/event loop starvation and cascading failures.
   4. **Idempotency ID Assigner**: Ensures every incident submitted through the coordinator has a deterministic incident ID (`INC-<ZONE>-<sequence>-<hash>`) assigned *prior* to network dispatch. If a transient network glitch triggers a retry, the identical ID is transmitted, preventing duplicate database entries.
 
 ### 3.2. Zone Node Service (`zone-node`)
-- **Role**: Autonomous partition server managing traffic incidents for a designated geographic territory.
+- **Technology**: Node.js 20+, Express.js, `pg` (PostgreSQL Client Pool), ES Modules.
 - **Instances**:
   - `zone-north`: Configured with `ZONE_ID=NORTH`, `ZONE_NAME="North District"`, Port `8081`.
   - `zone-central`: Configured with `ZONE_ID=CENTRAL`, `ZONE_NAME="Central District"`, Port `8082`.
   - `zone-south`: Configured with `ZONE_ID=SOUTH`, `ZONE_NAME="South District"`, Port `8083`.
 - **Core Modules**:
-  1. **Zone Incident Controller (`ZoneIncidentController.java`)**: Exposes REST endpoints for incident creation, querying, filtering, and status updates.
-  2. **Idempotent Incident Service (`ZoneIncidentService.java`)**: Implements `findById` checks before insertion. If an incident ID already exists, it detects the duplicate, logs the idempotency hit, and returns the existing incident with `200 OK` rather than throwing a duplicate key constraint violation.
-  3. **Health Telemetry Controller (`ZoneHealthController.java`)**: Exposes node metadata, JVM uptime, active incident count, and operational readiness for Docker health checks and coordinator heartbeats.
-  4. **Spring Data JPA & Hibernate Repository (`IncidentRepository.java`)**: Maps entities to PostgreSQL tables and performs filtered partition queries.
+  1. **Express Router & Controller (`src/index.js`)**: Exposes REST endpoints for incident creation, querying, filtering, and status updates with field validation.
+  2. **Idempotent Incident Service (`src/incidentService.js`)**: Implements `findIncidentById` checks before insertion. If an incident ID already exists, it detects the duplicate, logs the idempotency hit, and returns the existing incident with `200 OK` rather than throwing a duplicate key constraint violation.
+  3. **Health Telemetry Controller**: Exposes node metadata, process uptime, active incident count, and operational readiness for Docker health checks and coordinator heartbeats.
+  4. **PostgreSQL Client Pool (`src/db.js`)**: Manages connection pooling with automatic connection retry on startup, schema creation, and filtered partition queries.
 
 ### 3.3. Durable Storage Service (`traffic-db`)
 - **Role**: Shared relational database ensuring ACID durability and persistent crash recovery.
@@ -99,37 +99,15 @@ flowchart TD
 
 ---
 
-## 4. Inter-Service Communication & Networking
-
-### 4.1. Docker Virtual Bridge Network (`traffic-network`)
-All backend containers communicate across a dedicated, user-defined Docker bridge network:
-- **DNS Resolution**: Containers resolve peers via service names (`zone-north`, `zone-central`, `zone-south`, `coordinator-service`, `traffic-db`).
-- **Isolation**: Containers are isolated from unauthorized external traffic while exposing specific host ports for local administrative interaction.
-
-### 4.2. Port Allocation Matrix
-
-| Service | Internal Port | Host Port Binding | Protocol | Description |
-|---|---|---|---|---|
-| `coordinator-service` | `8080` | `0.0.0.0:8080` | HTTP / REST | Public aggregation & dispatch API |
-| `zone-north` | `8081` | `0.0.0.0:8081` | HTTP / REST | North District partition API |
-| `zone-central` | `8082` | `0.0.0.0:8082` | HTTP / REST | Central District partition API |
-| `zone-south` | `8083` | `0.0.0.0:8083` | HTTP / REST | South District partition API |
-| `traffic-db` | `5432` | `0.0.0.0:5432` | TCP / PostgreSQL | Relational database engine |
-| `dashboard` | `5173` | `0.0.0.0:5173` | HTTP / Web | Operations UI dev server |
-
----
-
-## 5. End-to-End Incident Submission Sequence Diagram
-
-The following sequence diagram details the end-to-end lifecycle of an incident submission, highlighting idempotency key assignment, bounded retries on transient network errors, database persistence, and client acknowledgment:
+## 4. End-to-End Incident Submission (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Client as Operator / Dashboard
-    participant Coord as Coordinator Service (8080)
+    participant Coord as Coordinator Service (Node.js:8080)
     participant Retry as BoundedRetryExecutor
-    participant Zone as Zone Node (zone-south:8083)
+    participant Zone as Zone Node (Node.js:8083)
     participant DB as PostgreSQL (traffic-db:5432)
 
     Client->>Coord: POST /api/coordinator/incidents (IncidentRequest)
@@ -168,40 +146,4 @@ sequenceDiagram
 
     Retry-->>Coord: IncidentResponse DTO
     Coord-->>Client: 201 Created (IncidentResponse JSON)
-```
-
----
-
-## 6. City-Wide Aggregated Query Sequence Diagram (Partial Failure)
-
-When an operator or dashboard requests a city-wide report while one zone is experiencing an outage, the coordinator returns partial results with graceful degradation:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Dashboard as React Dashboard
-    participant Coord as Coordinator Service
-    participant North as Zone North (8081)
-    participant Central as Zone Central (8082)
-    participant South as Zone South (8083) [STOPPED]
-
-    Dashboard->>Coord: GET /api/coordinator/city-report
-    Note over Coord: Scatter-Gather Fan-Out<br/>Launch 3 concurrent CompletableFuture tasks
-
-    par Query North
-        Coord->>North: GET /api/incidents
-        North-->>Coord: 200 OK [3 incidents]
-    and Query Central
-        Coord->>Central: GET /api/incidents
-        Central-->>Coord: 200 OK [2 incidents]
-    and Query South
-        Coord->>South: GET /api/incidents
-        South--xCoord: Connection Refused / Timeout
-        Note over Coord: Catch ResourceAccessException<br/>Record error in nodeErrors.SOUTH
-    end
-
-    Note over Coord: Aggregate responding zones: [NORTH, CENTRAL]<br/>Mark unavailableZones: [SOUTH]<br/>Compute systemStatus = "PARTIALLY_DEGRADED"
-
-    Coord-->>Dashboard: 200 OK (CityIncidentReport JSON with Partial Results)
-    Note over Dashboard: Render partial results &<br/>display System Degraded Alert Banner
 ```

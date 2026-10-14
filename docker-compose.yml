@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - traffic-db-data:/var/lib/postgresql/data
-      - ./zone-node/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./zone-node/src/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - traffic-network
     restart: unless-stopped
