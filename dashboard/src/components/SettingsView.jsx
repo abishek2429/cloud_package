@@ -95,7 +95,7 @@ export default function SettingsView({
               }}
               value={apiUrl}
               onChange={(e) => setApiUrl(e.target.value)}
-              placeholder="/api (Vite Proxy / Vercel Rewrite) or https://your-backend.up.railway.app/api"
+              placeholder="/api (Default Vite Proxy) or http://127.0.0.1:8080/api"
             />
             <button type="submit" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem' }}>
               Save Target
@@ -213,10 +213,10 @@ export default function SettingsView({
       {/* 3. Distributed Architecture Cloud Topology Reference */}
       <div className="table-card" style={{ padding: '1.75rem' }}>
         <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '0.5rem' }}>
-          Production Deployment Infrastructure Topology
+          Distributed Cluster Infrastructure Topology
         </h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-          Physical and cloud deployment tiers hosting the distributed monitoring system
+          Autonomous tiers hosting the distributed medical emergency & hospital surge system
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
@@ -229,10 +229,10 @@ export default function SettingsView({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
               <Globe size={18} color="var(--accent-cyan)" />
-              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Vercel Edge Platform</strong>
+              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Vite Operations Dashboard</strong>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Hosts the React 19 + Vite Operations Dashboard globally on edge CDN with sub-second asset delivery.
+              React 19 UI running on Port 5173 with sub-millisecond telemetry, dynamic themes, and live chaos injection controls.
             </p>
           </div>
 
@@ -245,10 +245,10 @@ export default function SettingsView({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
               <Cpu size={18} color="var(--accent-indigo)" />
-              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Railway Cluster Service</strong>
+              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Coordinator Gateway</strong>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Runs the 3 Autonomous Zone Nodes (Ports 8081-8083) and the Central Coordinator Gateway (Port 8080).
+              Node.js 20 ESM engine (Port 8080) orchestrating scatter-gather queries, hysteresis health tracking, and bounded backoff.
             </p>
           </div>
 
@@ -261,10 +261,10 @@ export default function SettingsView({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
               <Database size={18} color="var(--status-online)" />
-              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Render Cloud PostgreSQL</strong>
+              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Autonomous Hospital Partitions</strong>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Managed PostgreSQL 15 providing ACID transactions, foreign keys, and durable recovery across crashes.
+              3 independent hospital nodes (Ports 8081-8083) backed by PostgreSQL 15 ACID storage and resilient in-memory ledgers.
             </p>
           </div>
         </div>

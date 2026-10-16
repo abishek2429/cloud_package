@@ -268,7 +268,7 @@ export default function App() {
         color: 'var(--text-muted)',
         marginTop: '2rem'
       }}>
-        PulseGrid • Distributed Emergency Medical & Hospital Surge Network • Node.js 20 (ESM), Express.js, PostgreSQL 15, React 19, Docker Compose & Vercel
+        PulseGrid • Distributed Emergency Medical & Hospital Surge Network • Node.js 20 (ESM), Express.js, PostgreSQL 15, React 19, Docker Compose
       </footer>
     </div>
   );

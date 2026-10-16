@@ -146,36 +146,47 @@ sequenceDiagram
 
 ---
 
-## 6. Setup & Execution (Exact Windows PowerShell Commands)
+## 6. Setup & Execution (Windows PowerShell Commands)
 
-### Step 1: Start the Backend Docker Cluster
-Open a PowerShell terminal in the project root:
+### Option A: Fast Local Runner (Recommended for Demos & Vivas)
+No Docker required. Runs all 3 autonomous hospital nodes and the coordinator directly with self-healing and in-memory ledgers.
+
+**Terminal 1 — Cluster Backend:**
 ```powershell
-cd d:\cloud_package
+cd c:\cloud_package
+node start-all.js
+```
+*Spawns Zone North (8081), Zone Central (8082), Zone South (8083), and Central Coordinator (8080).*
+
+**Terminal 2 — Operations Dashboard:**
+```powershell
+cd c:\cloud_package\dashboard
+npm run dev
+```
+Open your browser at: **`http://localhost:5173/`**
+
+---
+
+### Option B: Docker Compose Cluster
+To spin up all 4 Node.js services plus containerized PostgreSQL 15:
+
+```powershell
+cd c:\cloud_package
 docker compose up --build -d
 ```
 Verify all 5 containers are running and healthy:
 ```powershell
 docker compose ps
 ```
-**Expected Output:**
-```text
-NAME                  IMAGE                               STATUS                   PORTS
-coordinator-service   cloud_package-coordinator-service   Up 2 minutes (healthy)   0.0.0.0:8080->8080/tcp
-zone-north            cloud_package-zone-north            Up 2 minutes (healthy)   0.0.0.0:8081->8081/tcp
-zone-central          cloud_package-zone-central          Up 2 minutes (healthy)   0.0.0.0:8082->8082/tcp
-zone-south            cloud_package-zone-south            Up 2 minutes (healthy)   0.0.0.0:8083->8083/tcp
-traffic-db            postgres:15-alpine                  Up 2 minutes (healthy)   0.0.0.0:5432->5432/tcp
-```
 
 ---
 
 ### Step 2: Run Automated Backend Tests (10/10 Passed)
 ```powershell
-cd d:\cloud_package\coordinator-service
+cd c:\cloud_package\coordinator-service
 npm test
 
-cd d:\cloud_package\zone-node
+cd c:\cloud_package\zone-node
 npm test
 ```
 **Expected Output:** All 10 tests pass (6 coordinator, 4 zone node) in < 400ms.
@@ -184,7 +195,7 @@ npm test
 
 ### Step 3: Run Live Integration Verification Script
 ```powershell
-cd d:\cloud_package
+cd c:\cloud_package
 powershell -ExecutionPolicy Bypass -File test_api.ps1
 ```
 Tests city report aggregation, incident creation, idempotency duplicate detection, and in-place status updates against the live cluster.
@@ -193,36 +204,25 @@ Tests city report aggregation, incident creation, idempotency duplicate detectio
 
 ### Step 4: Run Live Fault-Tolerance & Recovery Simulation
 ```powershell
-cd d:\cloud_package
+cd c:\cloud_package
 powershell -ExecutionPolicy Bypass -File test_fault_tolerance.ps1
 ```
 Automatically stops the South zone container, observes partial degradation, restarts the container, and verifies durable recovery.
 
 ---
 
-### Step 5: Start the React Operations Dashboard
-Open a second PowerShell terminal:
-```powershell
-cd d:\cloud_package\dashboard
-npm install
-npm run dev
-```
-Open your browser and navigate to: **`http://localhost:5173/`**
-
----
-
 ## 7. Clean Shutdown Instructions
 
-To gracefully stop and tear down the cluster:
+To gracefully stop the cluster:
 
 ```powershell
-# 1. Stop the React Dashboard dev server:
-# Press Ctrl + C in the dashboard terminal window.
+# If running via node start-all.js:
+# Press Ctrl + C in the terminal window (the supervisor performs graceful shutdown).
 
-# 2. Stop and remove Docker containers and networks:
-cd d:\cloud_package
+# If running via Docker Compose:
+cd c:\cloud_package
 docker compose down
 
-# 3. Optional: To delete the durable PostgreSQL volume (clean reset):
+# Optional: To delete the durable PostgreSQL volume (clean reset):
 docker compose down -v
 ```
