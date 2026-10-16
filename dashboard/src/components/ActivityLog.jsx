@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
-import { Terminal, Trash2, Download, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Terminal, Trash2, Download, CheckCircle, AlertTriangle, Activity, Wifi, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function ActivityLog({ logs, onClearLogs }) {
   const [filterType, setFilterType] = useState('ALL');
+  const [expandedIndices, setExpandedIndices] = useState({});
+
+  const toggleExpand = (idx) => {
+    setExpandedIndices(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
 
   const filteredLogs = (logs || []).filter((entry) => {
     if (filterType === 'REAL') {
@@ -16,6 +24,13 @@ export default function ActivityLog({ logs, onClearLogs }) {
     }
     return true;
   });
+
+  const totalLogs = logs?.length || 0;
+  const errorLogs = (logs || []).filter(e => !e.ok || (e.status && e.status >= 400)).length;
+  const successRate = totalLogs > 0 ? Math.round(((totalLogs - errorLogs) / totalLogs) * 100) : 100;
+  const avgLatency = totalLogs > 0
+    ? Math.round((logs || []).reduce((acc, curr) => acc + (curr.durationMs || 0), 0) / totalLogs)
+    : 0;
 
   const handleExportJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(logs, null, 2));
@@ -45,80 +60,119 @@ export default function ActivityLog({ logs, onClearLogs }) {
   };
 
   return (
-    <div className="activity-card" id="telemetry-activity-panel">
-      {/* Header */}
-      <div className="activity-header">
+    <div className="table-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* 1. Telemetry Stream KPI Header */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1rem',
+        paddingBottom: '1.25rem',
+        borderBottom: '1px solid var(--border-subtle)'
+      }}>
+        <div style={{ padding: '0.85rem 1rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invocations</span>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+            {totalLogs} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>calls</span>
+          </div>
+        </div>
+
+        <div style={{ padding: '0.85rem 1rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>HTTP Success Rate</span>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: successRate >= 95 ? 'var(--status-online)' : 'var(--status-degraded)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+            {successRate}%
+          </div>
+        </div>
+
+        <div style={{ padding: '0.85rem 1rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Average Latency</span>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+            {avgLatency} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>ms</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Controls & Filter Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Terminal size={18} color="var(--accent-cyan)" />
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-            Message & Telemetry Activity
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>
+            Live Telemetry Event Log
           </h3>
-          <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            ({filteredLogs.length})
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            ({filteredLogs.length} events visible)
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <select
-            id="activity-filter-select"
-            className="select-control"
-            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="ALL">All Events</option>
-            <option value="REAL">Real HTTP Telemetry</option>
-            <option value="SIMULATION">Simulation Events</option>
-            <option value="ERRORS">Errors Only</option>
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {/* Quick Filter Buttons */}
+          {['ALL', 'REAL', 'ERRORS'].map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`btn btn-sm ${filterType === f ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ fontSize: '0.75rem', padding: '0.25rem 0.65rem' }}
+              onClick={() => setFilterType(f)}
+            >
+              {f === 'ALL' ? 'All Events' : (f === 'REAL' ? 'HTTP Telemetry' : 'Errors Only')}
+            </button>
+          ))}
 
           <button
             id="export-logs-btn"
             className="btn btn-secondary btn-sm"
             onClick={handleExportJson}
-            title="Export activity logs as JSON"
-            style={{ padding: '0.25rem 0.5rem' }}
+            title="Download activity events as JSON"
+            style={{ fontSize: '0.75rem', padding: '0.25rem 0.65rem' }}
           >
             <Download size={13} />
+            <span>Export JSON</span>
           </button>
 
           <button
             id="clear-logs-btn"
             className="btn btn-secondary btn-sm"
             onClick={onClearLogs}
-            title="Clear activity log list"
-            style={{ padding: '0.25rem 0.5rem' }}
+            title="Clear current log buffer"
+            style={{ fontSize: '0.75rem', padding: '0.25rem 0.65rem' }}
           >
             <Trash2 size={13} />
+            <span>Clear</span>
           </button>
         </div>
       </div>
 
-      {/* Log Stream */}
-      <div className="activity-list" id="activity-log-stream">
+      {/* 3. Spacious Terminal Stream */}
+      <div className="activity-list" id="activity-log-stream" style={{ maxHeight: '600px', minHeight: '380px' }}>
         {filteredLogs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
-            No activity events recorded yet. Perform actions or wait for polling.
+          <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: 'var(--text-muted)' }}>
+            <Activity size={32} style={{ marginBottom: '0.5rem', opacity: 0.4 }} />
+            <p>No telemetry events logged yet. Invocations and polling events will appear here in real time.</p>
           </div>
         ) : (
           filteredLogs.map((entry, idx) => {
             const isError = !entry.ok || (entry.status && entry.status >= 400);
             const isReal = entry.type === 'REAL_HTTP_TELEMETRY';
             const timeStr = entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '';
+            const isExpanded = !!expandedIndices[idx];
 
             return (
               <div
                 key={idx}
                 className={`activity-item ${isError ? 'error' : (entry.method === 'CONFIG' ? 'config' : 'success')}`}
                 id={`activity-item-${idx}`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => toggleExpand(idx)}
               >
                 <div className="activity-meta-line">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {isExpanded ? <ChevronDown size={14} color="var(--text-muted)" /> : <ChevronRight size={14} color="var(--text-muted)" />}
+
                     {/* Method Tag */}
                     <span style={{
                       fontWeight: 700,
                       color: getMethodBadgeColor(entry.method),
-                      fontSize: '0.725rem'
+                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-mono)'
                     }}>
                       {entry.method}
                     </span>
@@ -126,21 +180,22 @@ export default function ActivityLog({ logs, onClearLogs }) {
                     {/* Telemetry Origin Badge */}
                     {isReal ? (
                       <span className="tag-real-telemetry">
-                        Real HTTP Telemetry
+                        HTTP Call
                       </span>
                     ) : (
                       <span className="tag-simulation-event">
-                        Simulation Event
+                        Event
                       </span>
                     )}
 
                     {/* Status Code */}
                     {entry.status > 0 && (
                       <span style={{
-                        padding: '0.1rem 0.35rem',
+                        padding: '0.1rem 0.4rem',
                         borderRadius: '3px',
-                        fontSize: '0.6875rem',
-                        fontWeight: 600,
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-mono)',
                         background: isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
                         color: isError ? '#f87171' : '#34d399'
                       }}>
@@ -149,28 +204,33 @@ export default function ActivityLog({ logs, onClearLogs }) {
                     )}
                   </div>
 
-                  <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                     {entry.durationMs > 0 && `${entry.durationMs}ms • `}{timeStr}
                   </span>
                 </div>
 
                 {/* Endpoint */}
-                <div className="activity-endpoint">
+                <div className="activity-endpoint" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
                   {entry.endpoint}
                 </div>
 
-                {/* Details snippet */}
+                {/* Details snippet or expanded view */}
                 {entry.details && (
                   <div style={{
-                    fontSize: '0.7rem',
+                    marginTop: '0.35rem',
+                    fontSize: '0.725rem',
+                    fontFamily: 'var(--font-mono)',
                     color: isError ? '#fca5a5' : 'var(--text-secondary)',
-                    maxHeight: '60px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    padding: '0.4rem 0.6rem',
+                    borderRadius: 'var(--radius-sm)',
+                    overflowX: 'auto',
+                    whiteSpace: isExpanded ? 'pre-wrap' : 'nowrap',
+                    textOverflow: isExpanded ? 'clip' : 'ellipsis',
+                    maxHeight: isExpanded ? '300px' : '32px'
                   }}>
                     {typeof entry.details === 'object'
-                      ? JSON.stringify(entry.details)
+                      ? JSON.stringify(entry.details, null, isExpanded ? 2 : 0)
                       : String(entry.details)}
                   </div>
                 )}

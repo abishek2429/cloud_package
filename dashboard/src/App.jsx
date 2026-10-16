@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import OverviewCards from './components/OverviewCards';
 import TopologyDiagram from './components/TopologyDiagram';
@@ -8,8 +8,9 @@ import IncidentForm from './components/IncidentForm';
 import ActivityLog from './components/ActivityLog';
 import FaultToleranceGuide from './components/FaultToleranceGuide';
 import DegradedBanner from './components/DegradedBanner';
+import SettingsView from './components/SettingsView';
 import { getCityReport, getNodeStatuses, subscribeActivity } from './api/trafficApi';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, X } from 'lucide-react';
 
 export default function App() {
   const [report, setReport] = useState(null);
@@ -20,6 +21,10 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(5000); // 5 seconds default
   const [activityLogs, setActivityLogs] = useState([]);
+
+  // Multi-Page Tab Navigation state
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'incidents' | 'telemetry' | 'chaos' | 'settings'
+  const [showReportForm, setShowReportForm] = useState(false);
 
   // Subscribe to real API activity events
   useEffect(() => {
@@ -38,10 +43,10 @@ export default function App() {
       // Concurrently query both city report and individual node telemetry
       const [reportData, nodesData] = await Promise.all([
         getCityReport(),
-        getNodeStatuses().catch(err => {
+        getNodeStatuses().catch((err) => {
           console.warn('Node status endpoint failed, falling back to report node statuses', err);
           return null;
-        })
+        }),
       ]);
 
       setReport(reportData);
@@ -79,8 +84,8 @@ export default function App() {
   }, [pollingInterval, fetchData]);
 
   const handleIncidentSubmitted = (newIncident) => {
-    // Immediately refresh data
     fetchData(false);
+    setShowReportForm(false);
   };
 
   const handleStatusUpdated = () => {
@@ -107,7 +112,7 @@ export default function App() {
           Connecting to Distributed Incident Monitoring Cluster...
         </h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Querying central coordinator on port 8080
+          Querying central coordinator API gateway
         </p>
         <style>{`
           @keyframes spin {
@@ -119,21 +124,26 @@ export default function App() {
     );
   }
 
+  const incidentCount = report?.incidents?.length || 0;
+  const logCount = activityLogs.length;
+
   return (
     <div className="app-container" id="dashboard-root-container">
-      {/* 1. Header Navigation & Controls */}
+      {/* 1. Header with Top Navigation Bar */}
       <Header
         systemStatus={report?.systemStatus || (error ? 'CRITICAL' : 'HEALTHY')}
         onRefresh={() => fetchData(false)}
         isLoading={isLoading}
-        pollingInterval={pollingInterval}
-        onPollingChange={setPollingInterval}
         lastUpdated={lastUpdated}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        incidentCount={incidentCount}
+        logCount={logCount}
       />
 
-      {/* 2. Error / Degradation Alert Banners */}
+      {/* 2. Connection Error Banner (Shown on any tab if Coordinator is unreachable) */}
       {error && (
-        <div className="degraded-banner critical" id="cluster-connection-error">
+        <div className="degraded-banner critical" id="cluster-connection-error" style={{ marginBottom: '1.5rem' }}>
           <AlertCircle size={24} style={{ flexShrink: 0 }} />
           <div>
             <strong style={{ color: '#fff' }}>Coordinator Communication Failure</strong>
@@ -149,43 +159,114 @@ export default function App() {
         </div>
       )}
 
-      <DegradedBanner report={report} />
+      {/* =========================================================================
+          PAGE 1: OPERATIONS OVERVIEW
+          ========================================================================= */}
+      {activeTab === 'overview' && (
+        <main className="tab-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          <DegradedBanner report={report} />
+          <OverviewCards report={report} nodes={nodes} />
+          <TopologyDiagram nodes={nodes} systemStatus={report?.systemStatus} />
+          <NodeCards nodes={nodes} report={report} />
+        </main>
+      )}
 
-      {/* 3. High-Level Metric Cards */}
-      <OverviewCards report={report} nodes={nodes} />
+      {/* =========================================================================
+          PAGE 2: INCIDENT COMMAND & REGISTER
+          ========================================================================= */}
+      {activeTab === 'incidents' && (
+        <main className="tab-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Action Bar */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            padding: '1rem 1.5rem',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>
+                Incident Command Center
+              </h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Filter, inspect, export, and report incidents across North, Central, and South districts
+              </p>
+            </div>
 
-      {/* 4. Architecture Topology & Live Flow Diagram */}
-      <TopologyDiagram nodes={nodes} systemStatus={report?.systemStatus} />
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <button
+                type="button"
+                className={showReportForm ? 'btn btn-secondary' : 'btn btn-primary'}
+                style={{ padding: '0.5rem 1.1rem', fontSize: '0.85rem' }}
+                onClick={() => setShowReportForm(!showReportForm)}
+              >
+                {showReportForm ? <X size={15} /> : <Plus size={15} />}
+                <span>{showReportForm ? 'Close Incident Form' : '+ Report New Incident'}</span>
+              </button>
+            </div>
+          </div>
 
-      {/* 5. Three Partition Node Cards (North, Central, South) */}
-      <NodeCards nodes={nodes} report={report} />
+          {/* Conditional Report Form Drawer */}
+          {showReportForm && (
+            <div style={{ animation: 'fadeIn 0.2s ease-in' }}>
+              <IncidentForm onIncidentSubmitted={handleIncidentSubmitted} />
+            </div>
+          )}
 
-      {/* 6. Two-Column Workspace */}
-      <div className="two-column-layout">
-        {/* Left Column: Incidents Table */}
-        <IncidentTable
-          incidents={report?.incidents || []}
-          onStatusUpdated={handleStatusUpdated}
-          isLoading={isLoading}
-        />
+          {/* Full-Width Uncongested Incident Register Table */}
+          <IncidentTable
+            incidents={report?.incidents || []}
+            onStatusUpdated={handleStatusUpdated}
+            isLoading={isLoading}
+          />
+        </main>
+      )}
 
-        {/* Right Column: Submission Form & Activity Stream */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          <IncidentForm onIncidentSubmitted={handleIncidentSubmitted} />
+      {/* =========================================================================
+          PAGE 3: LIVE TELEMETRY & HTTP STREAM
+          ========================================================================= */}
+      {activeTab === 'telemetry' && (
+        <main className="tab-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <ActivityLog logs={activityLogs} onClearLogs={handleClearLogs} />
-        </div>
-      </div>
+        </main>
+      )}
 
-      {/* 7. Visible Demonstration & Viva Checklist */}
-      <FaultToleranceGuide nodes={nodes} report={report} />
+      {/* =========================================================================
+          PAGE 4: FAULT TOLERANCE & CHAOS LAB
+          ========================================================================= */}
+      {activeTab === 'chaos' && (
+        <main className="tab-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <FaultToleranceGuide nodes={nodes} report={report} />
+        </main>
+      )}
 
-      {/* Footer */}
+      {/* =========================================================================
+          PAGE 5: CLUSTER SETTINGS & CONFIG
+          ========================================================================= */}
+      {activeTab === 'settings' && (
+        <main className="tab-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <SettingsView
+            pollingInterval={pollingInterval}
+            onPollingChange={setPollingInterval}
+            lastUpdated={lastUpdated}
+            onRefresh={() => fetchData(false)}
+          />
+        </main>
+      )}
+
+      {/* Clean Global Footer */}
       <footer style={{
         textAlign: 'center',
-        padding: '2rem 1rem 1.5rem',
+        padding: '2.5rem 1rem 1.5rem',
         borderTop: '1px solid var(--border-subtle)',
         fontSize: '0.8125rem',
-        color: 'var(--text-muted)'
+        color: 'var(--text-muted)',
+        marginTop: '2rem'
       }}>
         Distributed Traffic Incident Monitoring System • Node.js 20 (ESM), Express.js, PostgreSQL 15, React 19, Docker Compose & Vercel
       </footer>
