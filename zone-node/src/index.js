@@ -20,6 +20,56 @@ app.use((req, res, next) => {
   next();
 });
 
+/**
+ * Root Microservice Landing Page (Port 8081 / 8082 / 8083)
+ */
+app.get('/', (req, res) => {
+  const dbMeta = db.getDatabaseMetadata();
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PulseGrid — ${config.zoneName} (Port ${config.port})</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 2rem; }
+    .card { max-width: 680px; margin: 2rem auto; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .db-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-family: monospace; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700; }
+    h1 { font-size: 1.4rem; margin: 0.5rem 0 0.25rem; color: #0f172a; }
+    p { color: #64748b; font-size: 0.9rem; margin-top: 0; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.6rem 0; font-family: monospace; font-size: 0.85rem; }
+    a { color: #0284c7; text-decoration: none; font-weight: 600; }
+    a:hover { text-decoration: underline; }
+    .btn { display: inline-block; margin-top: 1.5rem; padding: 0.6rem 1.2rem; background: #0284c7; color: white; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.85rem; }
+    .btn:hover { background: #0369a1; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span class="badge">🟢 PARTITION ONLINE</span>
+      <span class="db-badge">🗄️ ${dbMeta.databaseName}</span>
+    </div>
+    <h1>${config.zoneName}</h1>
+    <p>Autonomous Regional Hospital Partition • Port ${config.port} • Zone ID: <strong>${config.zoneId}</strong></p>
+    <div style="background:#f1f5f9; padding:0.75rem 1rem; border-radius:8px; font-size:0.8rem; margin:1rem 0; line-height: 1.6;">
+      <div><strong>Storage Engine:</strong> ${dbMeta.storageEngine}</div>
+      <div><strong>Isolation Model:</strong> ${dbMeta.isolationModel}</div>
+      <div><strong>Dedicated Ledger File:</strong> <code>${dbMeta.dbFile}</code></div>
+    </div>
+    <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 1.25rem 0;" />
+    <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Interactive Regional REST Endpoints:</h3>
+    <ul>
+      <li><span style="color:#16a34a; font-weight:bold;">GET</span> <a href="/api/health" target="_blank">/api/health</a> — Node Health & Database Metadata</li>
+      <li><span style="color:#16a34a; font-weight:bold;">GET</span> <a href="/api/incidents" target="_blank">/api/incidents</a> — Patient Admissions & Emergency Register</li>
+    </ul>
+    <a href="http://localhost:5173" class="btn">🚀 Open Central Dashboard (Port 5173)</a>
+  </div>
+</body>
+</html>`);
+});
+
 // Allowed enum values
 const VALID_TYPES = [
   'MASS_TRAUMA',

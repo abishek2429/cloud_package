@@ -22,6 +22,48 @@ app.use((req, res, next) => {
 });
 
 /**
+ * Root Microservice Landing Page (Port 8080)
+ */
+app.get('/', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PulseGrid — Central Dispatch Coordinator (Port ${config.port})</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 2rem; }
+    .card { max-width: 680px; margin: 2rem auto; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    h1 { font-size: 1.4rem; margin: 0.5rem 0 0.25rem; color: #0f172a; }
+    p { color: #64748b; font-size: 0.9rem; margin-top: 0; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.6rem 0; font-family: monospace; font-size: 0.85rem; }
+    a { color: #0284c7; text-decoration: none; font-weight: 600; }
+    a:hover { text-decoration: underline; }
+    .btn { display: inline-block; margin-top: 1.5rem; padding: 0.6rem 1.2rem; background: #0284c7; color: white; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.85rem; }
+    .btn:hover { background: #0369a1; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">🟢 COORDINATOR ONLINE</span>
+    <h1>PulseGrid Central Emergency Dispatch Coordinator</h1>
+    <p>Scatter-Gather Triage Orchestrator & Hysteresis Health Monitor (Port ${config.port})</p>
+    <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 1.25rem 0;" />
+    <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Interactive REST API Endpoints:</h3>
+    <ul>
+      <li><span style="color:#16a34a; font-weight:bold;">GET</span> <a href="/api/coordinator/city-report" target="_blank">/api/coordinator/city-report</a> — Live Metropolitan Triage Report</li>
+      <li><span style="color:#16a34a; font-weight:bold;">GET</span> <a href="/api/coordinator/nodes" target="_blank">/api/coordinator/nodes</a> — Regional Hospital Partition Health</li>
+      <li><span style="color:#16a34a; font-weight:bold;">GET</span> <a href="/api/coordinator/health" target="_blank">/api/coordinator/health</a> — Service Telemetry & Uptime</li>
+      <li><span style="color:#16a34a; font-weight:bold;">GET</span> <a href="/api/coordinator/chaos" target="_blank">/api/coordinator/chaos</a> — Live Fault Injection Status</li>
+    </ul>
+    <a href="http://localhost:5173" class="btn">🚀 Open Operations Dashboard (Port 5173)</a>
+  </div>
+</body>
+</html>`);
+});
+
+/**
  * Health check for coordinator itself
  * GET /api/coordinator/health and /coordinator/health
  */
