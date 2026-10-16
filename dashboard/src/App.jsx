@@ -182,12 +182,12 @@ export default function App() {
       {/* Footer */}
       <footer style={{
         textAlign: 'center',
-        padding: '2rem 1rem 1rem',
+        padding: '2rem 1rem 1.5rem',
         borderTop: '1px solid var(--border-subtle)',
         fontSize: '0.8125rem',
         color: 'var(--text-muted)'
       }}>
-        Distributed Traffic Incident Monitoring System • Java 17, Spring Boot 3.2, PostgreSQL 15, Spring RestClient, Docker Compose & React
+        Distributed Traffic Incident Monitoring System • Node.js 20 (ESM), Express.js, PostgreSQL 15, React 19, Docker Compose & Vercel
       </footer>
     </div>
   );

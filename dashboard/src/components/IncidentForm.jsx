@@ -92,6 +92,33 @@ export default function IncidentForm({ onIncidentSubmitted }) {
     }
   };
 
+  const handleBatchSeed = async () => {
+    setIsSubmitting(true);
+    setFormError(null);
+    setSuccessFeedback(null);
+    try {
+      let createdCount = 0;
+      for (const preset of presets) {
+        await submitIncident({
+          zoneId: preset.zone,
+          type: preset.type,
+          severity: preset.severity,
+          status: 'ACTIVE',
+          description: preset.desc
+        });
+        createdCount++;
+      }
+      setSuccessFeedback(`⚡ Successfully seeded ${createdCount} live incidents across North, Central, and South partitions!`);
+      if (onIncidentSubmitted) {
+        onIncidentSubmitted();
+      }
+    } catch (err) {
+      setFormError(`Batch seeding encountered an issue: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="form-card" id="incident-submission-form-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -101,9 +128,16 @@ export default function IncidentForm({ onIncidentSubmitted }) {
             Report Incident
           </h3>
         </div>
-        <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
-          Routes via Coordinator API
-        </span>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          style={{ fontSize: '0.725rem', padding: '0.25rem 0.6rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
+          onClick={handleBatchSeed}
+          disabled={isSubmitting}
+          title="Instantly dispatch 3 sample incidents (one to North, Central, South) for demo"
+        >
+          ⚡ Seed All 3 Zones
+        </button>
       </div>
 
       {/* Preset Pills */}

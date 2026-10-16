@@ -148,57 +148,12 @@ export async function submitIncident(incidentData) {
 
 /**
  * 5. Update Incident Status in a Specific Zone Node
- * PATCH /api/incidents/{id}/status (direct zone call or fallback)
+ * Routed seamlessly through the central coordinator proxy for cloud & local compatibility.
+ * PATCH /api/incidents/{id}/status
  */
 export async function updateIncidentStatus(zoneId, incidentId, status) {
-  // Map zone port for direct zone node call if needed
-  const portMap = {
-    'NORTH': 8081,
-    'CENTRAL': 8082,
-    'SOUTH': 8083
-  };
-  const port = portMap[zoneId?.toUpperCase()] || 8081;
-  const directUrl = `http://localhost:${port}/api/incidents/${incidentId}/status`;
-
-  const startTime = performance.now();
-  const timestamp = new Date().toISOString();
-
-  try {
-    const response = await fetch(directUrl, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ status })
-    });
-    const durationMs = Math.round(performance.now() - startTime);
-    const data = await response.json();
-
-    notifyActivity({
-      type: 'REAL_HTTP_TELEMETRY',
-      method: 'PATCH',
-      endpoint: directUrl,
-      status: response.status,
-      ok: response.ok,
-      durationMs,
-      details: data,
-      timestamp
-    });
-
-    return data;
-  } catch (err) {
-    const durationMs = Math.round(performance.now() - startTime);
-    notifyActivity({
-      type: 'REAL_HTTP_TELEMETRY',
-      method: 'PATCH',
-      endpoint: directUrl,
-      status: 0,
-      ok: false,
-      durationMs,
-      details: err.message,
-      timestamp
-    });
-    throw err;
-  }
+  return await apiRequest(`/incidents/${incidentId}/status?status=${encodeURIComponent(status)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  });
 }

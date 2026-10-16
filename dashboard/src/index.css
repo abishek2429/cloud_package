@@ -948,3 +948,37 @@ body {
   user-select: all;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* =============================================================================
+   Micro-Animations & Telemetry Pulses
+   ============================================================================= */
+
+@keyframes pulsingArrow {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateX(-50%) translateY(4px);
+    opacity: 1;
+    filter: drop-shadow(0 0 6px var(--status-online));
+  }
+}
+
+.pulsing-arrow {
+  animation: pulsingArrow 1.5s ease-in-out infinite;
+}
+
+.pulsing-icon {
+  animation: pulseDot 1.8s infinite ease-in-out;
+}
+
+/* Card hover glow enhancements */
+.metric-card:hover,
+.node-card:hover,
+.table-card:hover,
+.form-card:hover,
+.topology-card:hover {
+  border-color: rgba(6, 182, 212, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px rgba(6, 182, 212, 0.08);
+}

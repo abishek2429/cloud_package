@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Search, Filter, AlertCircle, CheckCircle, Clock, ArrowUpDown } from 'lucide-react';
+import { Table, Search, Filter, AlertCircle, CheckCircle, Clock, ArrowUpDown, Download } from 'lucide-react';
 import { updateIncidentStatus } from '../api/trafficApi';
 
 export default function IncidentTable({ incidents, onStatusUpdated, isLoading }) {
@@ -8,6 +8,28 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [updatingId, setUpdatingId] = useState(null);
+
+  const exportToCSV = () => {
+    if (!filteredIncidents.length) return;
+    const headers = ['ID', 'Zone', 'Type', 'Severity', 'Status', 'Description', 'Timestamp'];
+    const rows = filteredIncidents.map(i => [
+      i.id,
+      i.zoneId,
+      i.type,
+      i.severity,
+      i.status,
+      `"${(i.description || '').replace(/"/g, '""')}"`,
+      i.timestamp
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `traffic_incidents_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleStatusChange = async (incident, newStatus) => {
     try {
@@ -94,6 +116,17 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
             ({filteredIncidents.length} of {incidents?.length || 0})
           </span>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            style={{ marginLeft: '0.5rem', padding: '0.2rem 0.55rem', fontSize: '0.725rem' }}
+            onClick={exportToCSV}
+            disabled={!filteredIncidents.length}
+            title="Download current incident register as CSV"
+          >
+            <Download size={13} />
+            <span>CSV</span>
+          </button>
         </div>
 
         <div className="table-filters">
