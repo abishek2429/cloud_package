@@ -54,30 +54,33 @@ function startProcess(name, scriptRelativePath, envVars = {}) {
   return child;
 }
 
-// 1. Spawn Autonomous Hospital 1: North Trauma Center (8081)
+// 1. Spawn Autonomous Hospital 1: North Trauma Center (8081) - Database: pulsegrid_north
 startProcess('North-Trauma', path.join('zone-node', 'src', 'index.js'), {
   SERVER_PORT: '8081',
   PORT: '8081',
   ZONE_ID: 'NORTH',
   ZONE_NAME: 'North Trauma Center',
+  DB_NAME: 'pulsegrid_north',
   ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
 });
 
-// 2. Spawn Autonomous Hospital 2: Central General Hospital (8082)
+// 2. Spawn Autonomous Hospital 2: Central General Hospital (8082) - Database: pulsegrid_central
 startProcess('Central-General', path.join('zone-node', 'src', 'index.js'), {
   SERVER_PORT: '8082',
   PORT: '8082',
   ZONE_ID: 'CENTRAL',
   ZONE_NAME: 'Central General Hospital',
+  DB_NAME: 'pulsegrid_central',
   ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
 });
 
-// 3. Spawn Autonomous Hospital 3: South Memorial Hospital (8083)
+// 3. Spawn Autonomous Hospital 3: South Memorial Hospital (8083) - Database: pulsegrid_south
 startProcess('South-Memorial', path.join('zone-node', 'src', 'index.js'), {
   SERVER_PORT: '8083',
   PORT: '8083',
   ZONE_ID: 'SOUTH',
   ZONE_NAME: 'South Memorial Hospital',
+  DB_NAME: 'pulsegrid_south',
   ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
 });
 

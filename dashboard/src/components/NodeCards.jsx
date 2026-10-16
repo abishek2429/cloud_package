@@ -114,7 +114,7 @@ export default function NodeCards({ nodes, report }) {
             }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <Database size={12} color="var(--accent-cyan)" />
-                <span>Autonomous PostgreSQL Node: {meta.id}</span>
+                <span>Database: pulsegrid_{meta.id.toLowerCase()} (Dedicated)</span>
               </span>
               <span>
                 {isOnline ? 'Surge Status: Accepting Patients' : 'Rerouting Ambulance Dispatch'}

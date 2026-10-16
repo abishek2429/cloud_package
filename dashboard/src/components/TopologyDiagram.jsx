@@ -142,21 +142,121 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
           {renderHospitalPill(south, 'South Memorial Hospital', '8083', 'south', 'Regional Burn & Acute Unit', 40)}
         </div>
 
-        {/* Persistence Conduits to PostgreSQL */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          padding: '0.65rem 1.25rem',
-          background: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-medium)',
-          borderRadius: 'var(--radius-full)',
-          fontSize: '0.775rem',
-          color: 'var(--text-secondary)',
-          boxShadow: 'var(--shadow-sm)'
-        }}>
-          <Database size={16} color="var(--accent-cyan)" />
-          <span><strong>PostgreSQL 15</strong> (ACID Patient Ledger • Independent Hospital Connection Pooling • Zero Data Loss)</span>
+        {/* Persistence Tier: 3 Independent Databases (Shared-Nothing Architecture) */}
+        <div style={{ width: '100%', marginTop: '0.25rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            marginBottom: '0.75rem',
+            fontSize: '0.75rem',
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em'
+          }}>
+            <Database size={14} color="var(--accent-indigo)" />
+            <span>Shared-Nothing Distributed Database Tier (3 Independent Autonomous Databases)</span>
+          </div>
+
+          <div className="topology-branches" style={{ marginTop: '0' }}>
+            {/* Database North */}
+            <div style={{
+              flex: 1,
+              minWidth: '220px',
+              padding: '0.85rem 1rem',
+              background: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-medium)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.3rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Database size={14} color="var(--accent-cyan)" />
+                  <span style={{ fontWeight: 700, fontSize: '0.825rem', color: 'var(--text-main)' }}>
+                    Database North
+                  </span>
+                </div>
+                <span className="status-badge" style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem', background: 'var(--accent-cyan-subtle)', color: 'var(--accent-cyan)', border: '1px solid var(--accent-cyan)' }}>
+                  ISOLATED
+                </span>
+              </div>
+              <div style={{ fontSize: '0.725rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+                pulsegrid_north
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                Dedicated Schema & File Ledger • 0 Shared State
+              </div>
+            </div>
+
+            {/* Database Central */}
+            <div style={{
+              flex: 1,
+              minWidth: '220px',
+              padding: '0.85rem 1rem',
+              background: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-medium)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.3rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Database size={14} color="var(--accent-indigo)" />
+                  <span style={{ fontWeight: 700, fontSize: '0.825rem', color: 'var(--text-main)' }}>
+                    Database Central
+                  </span>
+                </div>
+                <span className="status-badge" style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-indigo)', border: '1px solid var(--accent-indigo)' }}>
+                  ISOLATED
+                </span>
+              </div>
+              <div style={{ fontSize: '0.725rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-indigo)' }}>
+                pulsegrid_central
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                Dedicated Schema & File Ledger • 0 Shared State
+              </div>
+            </div>
+
+            {/* Database South */}
+            <div style={{
+              flex: 1,
+              minWidth: '220px',
+              padding: '0.85rem 1rem',
+              background: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-medium)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.3rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Database size={14} color="var(--status-online)" />
+                  <span style={{ fontWeight: 700, fontSize: '0.825rem', color: 'var(--text-main)' }}>
+                    Database South
+                  </span>
+                </div>
+                <span className="status-badge" style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem', background: 'var(--status-online-subtle)', color: 'var(--status-online)', border: '1px solid var(--status-online)' }}>
+                  ISOLATED
+                </span>
+              </div>
+              <div style={{ fontSize: '0.725rem', fontFamily: 'var(--font-mono)', color: 'var(--status-online)' }}>
+                pulsegrid_south
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                Dedicated Schema & File Ledger • 0 Shared State
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

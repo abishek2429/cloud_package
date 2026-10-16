@@ -516,6 +516,11 @@ export default function FaultToleranceGuide({ nodes, report, onRefresh }) {
               title: 'Idempotency & Deduplication',
               badge: 'Data Integrity',
               description: 'Client idempotency keys and deterministic ticket hashes ensure network retries never produce duplicate database rows.'
+            },
+            {
+              title: 'Shared-Nothing Database Tier',
+              badge: 'Database-per-Service',
+              description: 'Each hospital partition owns its own independent database (pulsegrid_north, pulsegrid_central, pulsegrid_south). Zero shared memory, cross-database locks, or single points of failure.'
             }
           ].map((dp, idx) => (
             <div

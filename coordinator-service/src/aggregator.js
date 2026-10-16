@@ -45,6 +45,12 @@ export async function aggregateCityReport() {
         status: 'ONLINE',
         responseTimeMs: data.responseTimeMs,
         incidentCount: incCount,
+        database: {
+          name: `pulsegrid_${zone.id.toLowerCase()}`,
+          engine: 'PostgreSQL 15 (Isolated Schema) / Local Ledger',
+          file: `data/hospital_${zone.id.toLowerCase()}_db.json`,
+          isolation: 'Shared-Nothing (Database-per-Service)'
+        },
         errorMessage: null,
       });
     } else {
@@ -63,6 +69,12 @@ export async function aggregateCityReport() {
         status: 'OFFLINE',
         responseTimeMs: outcome.status === 'fulfilled' ? outcome.value.responseTimeMs : 0,
         incidentCount: 0,
+        database: {
+          name: `pulsegrid_${zone.id.toLowerCase()}`,
+          engine: 'PostgreSQL 15 (Isolated Schema) / Local Ledger',
+          file: `data/hospital_${zone.id.toLowerCase()}_db.json`,
+          isolation: 'Shared-Nothing (Database-per-Service)'
+        },
         errorMessage: errorMsg,
       });
       console.warn(`[Aggregator] Degraded aggregation: Hospital [${zone.id}] is unavailable (Reason: ${errorMsg})`);

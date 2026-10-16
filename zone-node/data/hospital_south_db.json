@@ -1,0 +1,12 @@
+[
+  {
+    "id": "INC-SOUTH-101-9B2F",
+    "zone_id": "SOUTH",
+    "zoneId": "SOUTH",
+    "type": "BURN_CRITICAL",
+    "severity": "HIGH",
+    "description": "Industrial Flash Chemical Burn (35% TBSA): Admitted to Burn Intensive Care Unit",
+    "timestamp": "2026-10-16T06:08:04.318Z",
+    "status": "ACTIVE"
+  }
+]

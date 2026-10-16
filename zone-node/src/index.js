@@ -49,6 +49,7 @@ app.get('/api/health', async (req, res) => {
       status: 'UP',
       zoneId: config.zoneId,
       zoneName: config.zoneName,
+      database: db.getDatabaseMetadata(),
       incidentCount,
       uptimeSeconds,
       timestamp: new Date().toISOString(),

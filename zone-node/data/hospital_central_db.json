@@ -1,0 +1,22 @@
+[
+  {
+    "id": "INC-CENTRAL-101-3048",
+    "zone_id": "CENTRAL",
+    "zoneId": "CENTRAL",
+    "type": "CARDIAC_ARREST",
+    "severity": "HIGH",
+    "description": "STEMI Acute Myocardial Infarction: Direct ambulance transfer to Cardiac Catheterization Lab",
+    "timestamp": "2026-10-16T06:08:04.319Z",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "INC-CENTRAL-102-BF62",
+    "zone_id": "CENTRAL",
+    "zoneId": "CENTRAL",
+    "type": "RESPIRATORY_FAILURE",
+    "severity": "MEDIUM",
+    "description": "Severe Acute Respiratory Distress: Intubated in Emergency Bay 4, pending ICU transfer",
+    "timestamp": "2026-10-16T06:08:04.322Z",
+    "status": "ACTIVE"
+  }
+]

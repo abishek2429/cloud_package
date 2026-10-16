@@ -1,0 +1,22 @@
+[
+  {
+    "id": "INC-NORTH-101-825B",
+    "zone_id": "NORTH",
+    "zoneId": "NORTH",
+    "type": "MASS_TRAUMA",
+    "severity": "HIGH",
+    "description": "Mass Casualty Highway Collision: 3 polytrauma patients admitted to Shock Trauma Bay 1",
+    "timestamp": "2026-10-16T06:08:04.318Z",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "INC-NORTH-102-58F3",
+    "zone_id": "NORTH",
+    "zoneId": "NORTH",
+    "type": "SURGICAL_EMERGENCY",
+    "severity": "HIGH",
+    "description": "Acute Subdural Hematoma: Emergency neuro-surgical operating room prepped",
+    "timestamp": "2026-10-16T06:08:04.321Z",
+    "status": "INVESTIGATING"
+  }
+]
