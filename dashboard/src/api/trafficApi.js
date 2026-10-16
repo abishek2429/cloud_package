@@ -157,3 +157,39 @@ export async function updateIncidentStatus(zoneId, incidentId, status) {
     body: JSON.stringify({ status })
   });
 }
+
+/**
+ * =============================================================================
+ * Chaos & Distributed Systems Interactive API Methods
+ * =============================================================================
+ */
+
+export async function getChaosStatus() {
+  return await apiRequest('/coordinator/chaos');
+}
+
+export async function setNodeChaosMode(zoneId, mode) {
+  return await apiRequest('/coordinator/chaos/toggle', {
+    method: 'POST',
+    body: JSON.stringify({ zoneId, mode })
+  });
+}
+
+export async function resetChaos() {
+  return await apiRequest('/coordinator/chaos/reset', {
+    method: 'POST'
+  });
+}
+
+export async function triggerSurgeSimulation(count = 6) {
+  return await apiRequest('/coordinator/chaos/surge', {
+    method: 'POST',
+    body: JSON.stringify({ count })
+  });
+}
+
+export async function runIdempotencyExperiment() {
+  return await apiRequest('/coordinator/chaos/test-idempotency', {
+    method: 'POST'
+  });
+}

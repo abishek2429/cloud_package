@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import { isZoneOffline, getZoneDelay } from './chaos.js';
 
 /**
  * Node Health Monitor with Hysteresis State Machine
@@ -66,10 +67,20 @@ class NodeHealthMonitor {
     const state = this.nodeStates.get(zoneId);
     if (!state) return;
 
+    if (isZoneOffline(zoneId)) {
+      this.handleFailure(state, 0, 'Simulated Chaos Partition: Network Cable Severed');
+      return;
+    }
+
+    const delay = getZoneDelay(zoneId);
+    if (delay > 0) {
+      await new Promise((r) => setTimeout(r, delay));
+    }
+
     const start = Date.now();
     try {
       const response = await fetch(`${zone.url}/api/health`, {
-        signal: AbortSignal.timeout(config.healthCheck.timeoutMs),
+        signal: AbortSignal.timeout(config.healthCheck.timeoutMs + delay),
       });
 
       const latencyMs = Date.now() - start;

@@ -21,7 +21,18 @@ app.use((req, res, next) => {
 });
 
 // Allowed enum values
-const VALID_TYPES = ['ACCIDENT', 'TRAFFIC_JAM', 'HAZARD', 'ROAD_CLOSED'];
+const VALID_TYPES = [
+  'MASS_TRAUMA',
+  'CARDIAC_ARREST',
+  'RESPIRATORY_FAILURE',
+  'SURGICAL_EMERGENCY',
+  'BURN_CRITICAL',
+  'STROKE_ALERT',
+  'ACCIDENT',
+  'TRAFFIC_JAM',
+  'HAZARD',
+  'ROAD_CLOSED',
+];
 const VALID_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH'];
 const VALID_STATUSES = ['ACTIVE', 'INVESTIGATING', 'RESOLVED'];
 

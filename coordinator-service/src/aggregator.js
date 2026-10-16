@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { config } from './config.js';
 import { executeWithRetry } from './retryExecutor.js';
 import { healthMonitor } from './healthMonitor.js';
+import { isZoneOffline, getZoneDelay } from './chaos.js';
 
 /**
  * Aggregates incident reports from all available zone nodes with graceful degradation.
@@ -116,10 +117,26 @@ export async function aggregateCityReport() {
 }
 
 async function querySingleZone(zone) {
+  const zoneId = zone.id.toUpperCase();
+  if (isZoneOffline(zoneId)) {
+    return {
+      success: false,
+      zoneId: zone.id,
+      zoneName: zone.name,
+      responseTimeMs: 0,
+      errorMessage: 'Simulated Chaos Partition: Network Cable Severed',
+    };
+  }
+
+  const delay = getZoneDelay(zoneId);
+  if (delay > 0) {
+    await new Promise((r) => setTimeout(r, delay));
+  }
+
   const start = Date.now();
   try {
     const response = await fetch(`${zone.url}/api/incidents`, {
-      signal: AbortSignal.timeout(config.http.readTimeoutMs),
+      signal: AbortSignal.timeout(config.http.readTimeoutMs + delay),
     });
     const latency = Date.now() - start;
 

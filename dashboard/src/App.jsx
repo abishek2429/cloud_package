@@ -241,7 +241,7 @@ export default function App() {
           ========================================================================= */}
       {activeTab === 'chaos' && (
         <main className="tab-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <FaultToleranceGuide nodes={nodes} report={report} />
+          <FaultToleranceGuide nodes={nodes} report={report} onRefresh={() => fetchData(false)} />
         </main>
       )}
 

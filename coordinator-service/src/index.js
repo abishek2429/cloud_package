@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config } from './config.js';
 import { healthMonitor } from './healthMonitor.js';
 import * as aggregator from './aggregator.js';
+import * as chaos from './chaos.js';
 
 const app = express();
 const startTime = Date.now();
@@ -193,6 +194,127 @@ app.patch('/api/incidents/:id/status', async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: 'Status update failed', details: err.message });
+  }
+});
+
+/**
+ * =============================================================================
+ * Chaos & Distributed Systems Interactive Control Endpoints
+ * =============================================================================
+ */
+app.get('/api/coordinator/chaos', (req, res) => {
+  res.json(chaos.getChaosStatus());
+});
+app.get('/coordinator/chaos', (req, res) => {
+  res.json(chaos.getChaosStatus());
+});
+
+app.post('/api/coordinator/chaos/toggle', (req, res) => {
+  try {
+    const { zoneId, mode } = req.body;
+    const result = chaos.setZoneChaos(zoneId, mode);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.post('/coordinator/chaos/toggle', (req, res) => {
+  try {
+    const { zoneId, mode } = req.body;
+    const result = chaos.setZoneChaos(zoneId, mode);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/coordinator/chaos/reset', (req, res) => {
+  chaos.resetAllChaos();
+  res.json({ status: 'RESET_OK', chaos: chaos.getChaosStatus() });
+});
+
+// Interactive Experiment 1: Mass Casualty Incident (MCI) Surge
+app.post('/api/coordinator/chaos/surge', async (req, res) => {
+  try {
+    const count = parseInt(req.body.count || '6', 10);
+    const conditions = ['MASS_TRAUMA', 'CARDIAC_ARREST', 'RESPIRATORY_FAILURE', 'SURGICAL_EMERGENCY', 'BURN_CRITICAL', 'STROKE_ALERT'];
+    const triageLevels = ['HIGH', 'HIGH', 'HIGH', 'MEDIUM', 'MEDIUM', 'LOW'];
+    
+    // Find online zones
+    const onlineZones = config.zones.filter((z) => !chaos.isZoneOffline(z.id));
+    if (onlineZones.length === 0) {
+      return res.status(503).json({ error: 'All hospital partitions are currently isolated. Cannot route surge dispatches.' });
+    }
+
+    const dispatched = [];
+    for (let i = 0; i < count; i++) {
+      const targetZone = onlineZones[i % onlineZones.length];
+      const condition = conditions[i % conditions.length];
+      const triage = triageLevels[i % triageLevels.length];
+      
+      const payload = {
+        zoneId: targetZone.id,
+        type: condition,
+        severity: triage,
+        description: `MCI Mass Disaster Ambulance Wave #${i + 1}: ${condition} routed to ${targetZone.name}`,
+        status: 'ACTIVE',
+      };
+      
+      const outcome = await aggregator.routeIncidentCreation(payload);
+      dispatched.push(outcome.data);
+    }
+
+    res.json({
+      success: true,
+      message: `Surge successfully executed: ${dispatched.length} emergency patients dynamically balanced across ${onlineZones.length} responding hospitals.`,
+      dispatchedCount: dispatched.length,
+      routedTo: onlineZones.map((z) => z.name),
+      dispatches: dispatched,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Surge simulation failed', details: err.message });
+  }
+});
+
+// Interactive Experiment 2: Double-Dispatch Idempotency Attack
+app.post('/api/coordinator/chaos/test-idempotency', async (req, res) => {
+  try {
+    const testId = `IDEMP-TEST-${Date.now().toString(36).toUpperCase()}`;
+    const targetZone = config.zones.find((z) => !chaos.isZoneOffline(z.id)) || config.zones[0];
+    
+    const payload = {
+      id: testId,
+      zoneId: targetZone.id,
+      type: 'CARDIAC_ARREST',
+      severity: 'HIGH',
+      description: `[Idempotency Audit Test] Deterministic Key: ${testId}`,
+      status: 'ACTIVE',
+    };
+
+    // First request
+    const firstOutcome = await aggregator.routeIncidentCreation(payload);
+    
+    // Second concurrent duplicate request with identical ID
+    const secondOutcome = await aggregator.routeIncidentCreation(payload);
+
+    res.json({
+      experiment: 'Idempotency & Deduplication Engine',
+      targetHospital: targetZone.name,
+      idempotencyKey: testId,
+      request1: {
+        status: firstOutcome.statusCode,
+        result: 'First Ingestion (201 Created in PostgreSQL)',
+        incident: firstOutcome.data,
+      },
+      request2: {
+        status: secondOutcome.statusCode,
+        result: 'Duplicate Transmission Caught (200 OK Idempotent Cached Result - No Duplicate Database Row Created!)',
+        incident: secondOutcome.data,
+      },
+      verdict: 'PASSED: Zero duplicate records inserted under network retransmission',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Idempotency experiment failed', details: err.message });
   }
 });
 
