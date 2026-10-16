@@ -1,0 +1,100 @@
+/**
+ * Production Cluster Runner for Railway / Cloud Deployments
+ *
+ * Concurrently spawns the three autonomous Zone Nodes (Ports 8081, 8082, 8083)
+ * and the central Coordinator Service (Port 8080 or Railway's assigned $PORT).
+ */
+
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const port = process.env.PORT || '8080';
+const dbUrl = process.env.DATABASE_URL || process.env.SPRING_DATASOURCE_URL;
+
+console.log('================================================================');
+console.log('🚀 Starting Distributed Traffic Incident Monitoring System');
+console.log(`📡 Coordinator Public Port: ${port}`);
+console.log(`🗄️ Database: ${dbUrl ? 'Configured (DATABASE_URL detected)' : 'Local Default'}`);
+console.log('================================================================');
+
+const children = [];
+
+function startProcess(name, scriptRelativePath, envVars = {}) {
+  const fullPath = path.join(__dirname, scriptRelativePath);
+  const child = spawn(process.execPath, [fullPath], {
+    env: {
+      ...process.env,
+      ...envVars,
+    },
+    stdio: 'inherit',
+    cwd: path.dirname(fullPath),
+  });
+
+  child.on('error', (err) => {
+    console.error(`❌ [${name}] Process error:`, err);
+  });
+
+  child.on('exit', (code, signal) => {
+    console.log(`⚠️ [${name}] Process exited (Code: ${code}, Signal: ${signal})`);
+  });
+
+  children.push({ name, process: child });
+  return child;
+}
+
+// 1. Spawn Autonomous Zone 1: North (8081)
+startProcess('Zone-North', path.join('zone-node', 'src', 'index.js'), {
+  SERVER_PORT: '8081',
+  PORT: '8081',
+  ZONE_ID: 'NORTH',
+  ZONE_NAME: 'North District',
+  ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
+});
+
+// 2. Spawn Autonomous Zone 2: Central (8082)
+startProcess('Zone-Central', path.join('zone-node', 'src', 'index.js'), {
+  SERVER_PORT: '8082',
+  PORT: '8082',
+  ZONE_ID: 'CENTRAL',
+  ZONE_NAME: 'Central District',
+  ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
+});
+
+// 3. Spawn Autonomous Zone 3: South (8083)
+startProcess('Zone-South', path.join('zone-node', 'src', 'index.js'), {
+  SERVER_PORT: '8083',
+  PORT: '8083',
+  ZONE_ID: 'SOUTH',
+  ZONE_NAME: 'South District',
+  ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
+});
+
+// 4. Wait 2 seconds for zone nodes to initialize DB connections, then start Coordinator Service
+setTimeout(() => {
+  startProcess('Coordinator', path.join('coordinator-service', 'src', 'index.js'), {
+    PORT: port,
+    SERVER_PORT: port,
+    ZONE_NORTH_URL: 'http://127.0.0.1:8081',
+    ZONE_CENTRAL_URL: 'http://127.0.0.1:8082',
+    ZONE_SOUTH_URL: 'http://127.0.0.1:8083',
+  });
+}, 2000);
+
+// Graceful shutdown handling
+function handleShutdown(signal) {
+  console.log(`\n🛑 Received ${signal}. Terminating all cluster nodes...`);
+  children.forEach(({ name, process }) => {
+    try {
+      process.kill();
+    } catch {
+      // Ignore if already dead
+    }
+  });
+  process.exit(0);
+}
+
+process.on('SIGINT', () => handleShutdown('SIGINT'));
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));

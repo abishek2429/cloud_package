@@ -1,0 +1,9 @@
+{
+  "name": "traffic-incident-backend",
+  "version": "1.0.0",
+  "description": "Distributed Traffic Incident Monitoring System Backend",
+  "type": "module",
+  "scripts": {
+    "start": "node start-all.js"
+  }
+}

@@ -25,7 +25,11 @@ function parseDatabaseConfig() {
   }
 
   if (process.env.DATABASE_URL) {
-    return { connectionString: process.env.DATABASE_URL };
+    const isLocal = process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
+    };
   }
 
   return {
