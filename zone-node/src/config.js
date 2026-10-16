@@ -33,7 +33,7 @@ function parseDatabaseConfig() {
   }
 
   return {
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || 'traffic-db',
     port: parseInt(process.env.DB_PORT || '5432', 10),
     database: process.env.DB_NAME || 'traffic_monitoring',
     user: process.env.DB_USER || 'traffic_admin',
