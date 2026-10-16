@@ -45,14 +45,21 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
   };
 
   const getSystemStatusBadge = () => {
-    const status = systemStatus?.toUpperCase() || 'HEALTHY';
-    if (status === 'HEALTHY') {
+    const onlineCount = nodes?.filter(n => n.status === 'ONLINE').length || 0;
+    if (nodes && nodes.length > 0 && onlineCount === 0) {
+      return <span className="status-badge critical" style={{ fontSize: '0.7rem' }}>CRITICAL • ALL HOSPITALS ISOLATED</span>;
+    }
+    const status = systemStatus?.toUpperCase();
+    if (status === 'HEALTHY' && onlineCount >= 3) {
       return <span className="status-badge healthy" style={{ fontSize: '0.7rem' }}>HEALTHY • ALL 3 HOSPITALS DISPATCHING</span>;
     }
-    if (status === 'PARTIALLY_DEGRADED') {
+    if (status === 'PARTIALLY_DEGRADED' || (onlineCount > 0 && onlineCount < 3)) {
       return <span className="status-badge partially-degraded" style={{ fontSize: '0.7rem' }}>SURGE REROUTED • HOSPITAL PARTITION ISOLATED</span>;
     }
-    return <span className="status-badge critical" style={{ fontSize: '0.7rem' }}>CRITICAL • METROPOLITAN EMS COMMUNICATIONS OUTAGE</span>;
+    if (status === 'CRITICAL' || onlineCount === 0) {
+      return <span className="status-badge critical" style={{ fontSize: '0.7rem' }}>CRITICAL • METROPOLITAN EMS COMMUNICATIONS OUTAGE</span>;
+    }
+    return <span className="status-badge healthy" style={{ fontSize: '0.7rem' }}>CONNECTING TELEMETRY...</span>;
   };
 
   return (

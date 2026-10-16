@@ -11,7 +11,7 @@ export const config = {
       hospitalName: 'North Trauma Center',
       facilityType: 'Level 1 Emergency Trauma',
       totalIcuBeds: 45,
-      url: process.env.ZONE_NORTH_URL || 'http://zone-north:8081',
+      url: process.env.ZONE_NORTH_URL || 'http://127.0.0.1:8081',
     },
     {
       id: 'CENTRAL',
@@ -19,7 +19,7 @@ export const config = {
       hospitalName: 'Central General Hospital',
       facilityType: 'University Acute Care',
       totalIcuBeds: 60,
-      url: process.env.ZONE_CENTRAL_URL || 'http://zone-central:8082',
+      url: process.env.ZONE_CENTRAL_URL || 'http://127.0.0.1:8082',
     },
     {
       id: 'SOUTH',
@@ -27,7 +27,7 @@ export const config = {
       hospitalName: 'South Memorial Hospital',
       facilityType: 'Regional Surge & Burn Unit',
       totalIcuBeds: 40,
-      url: process.env.ZONE_SOUTH_URL || 'http://zone-south:8083',
+      url: process.env.ZONE_SOUTH_URL || 'http://127.0.0.1:8083',
     },
   ],
   http: {
