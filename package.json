@@ -1,9 +1,14 @@
 {
-  "name": "traffic-incident-backend",
+  "name": "pulsegrid-medical-network",
   "version": "1.0.0",
-  "description": "Distributed Traffic Incident Monitoring System Backend",
+  "description": "PulseGrid - Distributed Emergency Medical & Multi-Hospital Surge Network",
   "type": "module",
   "scripts": {
     "start": "node start-all.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
   }
 }
