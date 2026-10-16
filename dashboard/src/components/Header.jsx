@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Activity,
   RefreshCw,
@@ -9,7 +9,9 @@ import {
   Settings as SettingsIcon,
   CheckCircle2,
   XCircle,
-  Radio
+  Radio,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export default function Header({
@@ -22,6 +24,19 @@ export default function Header({
   incidentCount = 0,
   logCount = 0
 }) {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('pulsegrid_theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('pulsegrid_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   const getStatusBadge = () => {
     switch (systemStatus?.toUpperCase()) {
       case 'HEALTHY':
@@ -93,8 +108,8 @@ export default function Header({
       {/* Upper Brand & Controls Tier */}
       <div className="header-top-tier">
         <div className="brand-section">
-          <div className="brand-icon-wrapper" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(6, 182, 212, 0.2))', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
-            <Activity size={24} color="#f87171" />
+          <div className="brand-icon-wrapper">
+            <Activity size={24} color="#dc2626" />
           </div>
           <div>
             <h1 className="brand-title">
@@ -108,6 +123,18 @@ export default function Header({
 
         <div className="header-controls">
           {getStatusBadge()}
+
+          {/* Light / Dark Mode Toggle */}
+          <button
+            id="theme-toggle-btn"
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+          >
+            {theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
+            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
 
           {/* Quick Refresh Button */}
           <button

@@ -108,7 +108,7 @@ export default function App() {
         color: 'var(--text-secondary)'
       }}>
         <RefreshCw size={36} color="var(--accent-cyan)" style={{ animation: 'spin 1s linear infinite' }} />
-        <h3 style={{ color: '#fff', fontSize: '1.25rem' }}>
+        <h3 style={{ color: 'var(--text-heading)', fontSize: '1.25rem' }}>
           Connecting to Distributed Incident Monitoring Cluster...
         </h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -146,7 +146,7 @@ export default function App() {
         <div className="degraded-banner critical" id="cluster-connection-error" style={{ marginBottom: '1.5rem' }}>
           <AlertCircle size={24} style={{ flexShrink: 0 }} />
           <div>
-            <strong style={{ color: '#fff' }}>Coordinator Communication Failure</strong>
+            <strong style={{ color: 'var(--text-heading)' }}>Coordinator Communication Failure</strong>
             <p style={{ fontSize: '0.8125rem', marginTop: '0.2rem' }}>{error}</p>
           </div>
           <button
@@ -190,7 +190,7 @@ export default function App() {
             boxShadow: 'var(--shadow-sm)'
           }}>
             <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-heading)' }}>
                 Metropolitan Emergency Triage & Hospital Intake
               </h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

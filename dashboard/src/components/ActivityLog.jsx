@@ -45,15 +45,15 @@ export default function ActivityLog({ logs, onClearLogs }) {
   const getMethodBadgeColor = (method) => {
     switch (method?.toUpperCase()) {
       case 'GET':
-        return '#06b6d4';
+        return 'var(--accent-cyan)';
       case 'POST':
-        return '#10b981';
+        return 'var(--status-online)';
       case 'PATCH':
-        return '#8b5cf6';
+        return 'var(--accent-indigo)';
       case 'PUT':
-        return '#f59e0b';
+        return 'var(--status-degraded)';
       case 'DELETE':
-        return '#ef4444';
+        return 'var(--status-offline)';
       default:
         return 'var(--text-muted)';
     }
@@ -71,7 +71,7 @@ export default function ActivityLog({ logs, onClearLogs }) {
       }}>
         <div style={{ padding: '0.85rem 1rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invocations</span>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-heading)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
             {totalLogs} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>calls</span>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function ActivityLog({ logs, onClearLogs }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Terminal size={18} color="var(--accent-cyan)" />
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-heading)' }}>
             Live Telemetry Event Log
           </h3>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
@@ -196,8 +196,9 @@ export default function ActivityLog({ logs, onClearLogs }) {
                         fontSize: '0.7rem',
                         fontWeight: 700,
                         fontFamily: 'var(--font-mono)',
-                        background: isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                        color: isError ? '#f87171' : '#34d399'
+                        background: isError ? 'var(--status-offline-bg)' : 'var(--status-online-bg)',
+                        color: isError ? 'var(--status-offline)' : 'var(--status-online)',
+                        border: `1px solid ${isError ? 'var(--status-offline-border)' : 'var(--status-online-border)'}`
                       }}>
                         {entry.status}
                       </span>
@@ -220,8 +221,9 @@ export default function ActivityLog({ logs, onClearLogs }) {
                     marginTop: '0.35rem',
                     fontSize: '0.725rem',
                     fontFamily: 'var(--font-mono)',
-                    color: isError ? '#fca5a5' : 'var(--text-secondary)',
-                    background: 'rgba(0, 0, 0, 0.25)',
+                    color: isError ? 'var(--status-offline)' : 'var(--text-secondary)',
+                    background: 'var(--bg-surface-elevated)',
+                    border: '1px solid var(--border-subtle)',
                     padding: '0.4rem 0.6rem',
                     borderRadius: 'var(--radius-sm)',
                     overflowX: 'auto',

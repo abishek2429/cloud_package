@@ -22,7 +22,7 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Radio size={14} color={isOnline ? 'var(--status-online)' : 'var(--status-offline)'} className={isOnline ? 'pulsing-icon' : ''} />
-            <span style={{ fontWeight: 700, fontSize: '0.875rem', color: isOnline ? '#fff' : '#fca5a5' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.875rem', color: isOnline ? 'var(--text-main)' : 'var(--status-offline)' }}>
               {hospitalName}
             </span>
           </div>
@@ -35,7 +35,7 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
           Port {defaultPort} • {facilityType}
         </div>
 
-        <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: isOnline ? 'var(--text-secondary)' : '#f87171' }}>
+        <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: isOnline ? 'var(--text-secondary)' : 'var(--status-offline)' }}>
           {isOnline
             ? `${availableBeds}/${totalBeds} ICU Beds Available • ${incidents} Patients Admitted (${latency}ms)`
             : (node?.errorMessage || 'Telemetry Connection Timed Out')}
@@ -63,15 +63,15 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
             width: '32px',
             height: '32px',
             borderRadius: 'var(--radius-sm)',
-            background: 'rgba(239, 68, 68, 0.15)',
+            background: 'rgba(239, 68, 68, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <HeartPulse size={18} color="#f87171" />
+            <HeartPulse size={18} color="#dc2626" />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-heading)' }}>
               Metropolitan Hospital Network & Triage Flow
             </h3>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
@@ -141,7 +141,7 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
           alignItems: 'center',
           gap: '0.75rem',
           padding: '0.65rem 1.25rem',
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
+          background: 'var(--bg-surface-elevated)',
           border: '1px solid var(--border-medium)',
           borderRadius: 'var(--radius-full)',
           fontSize: '0.775rem',

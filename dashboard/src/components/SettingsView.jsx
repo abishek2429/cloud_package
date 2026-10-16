@@ -64,7 +64,7 @@ export default function SettingsView({
             width: '36px',
             height: '36px',
             borderRadius: 'var(--radius-sm)',
-            background: 'rgba(6, 182, 212, 0.15)',
+            background: 'rgba(2, 132, 199, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -72,7 +72,7 @@ export default function SettingsView({
             <Server size={20} color="var(--accent-cyan)" />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-heading)' }}>
               Coordinator API Target Endpoint
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -124,7 +124,7 @@ export default function SettingsView({
           {saveSuccess && (
             <div style={{
               padding: '0.65rem 0.85rem',
-              background: 'rgba(16, 185, 129, 0.12)',
+              background: 'var(--status-online-bg)',
               border: '1px solid var(--status-online-border)',
               borderRadius: 'var(--radius-sm)',
               color: 'var(--status-online)',
@@ -141,10 +141,10 @@ export default function SettingsView({
           {testStatus && (
             <div style={{
               padding: '0.75rem 1rem',
-              background: testStatus.ok ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              background: testStatus.ok ? 'var(--status-online-bg)' : 'var(--status-offline-bg)',
               border: `1px solid ${testStatus.ok ? 'var(--status-online-border)' : 'var(--status-offline-border)'}`,
               borderRadius: 'var(--radius-sm)',
-              color: testStatus.ok ? '#86efac' : '#fca5a5',
+              color: testStatus.ok ? 'var(--status-online)' : 'var(--status-offline)',
               fontSize: '0.825rem',
               display: 'flex',
               alignItems: 'center',
@@ -160,14 +160,14 @@ export default function SettingsView({
         </form>
       </div>
 
-      {/* 2. Telemetry Refresh & Polling Rates */}
+      {/* 2. Polling Frequency Options */}
       <div className="table-card" style={{ padding: '1.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
           <div style={{
             width: '36px',
             height: '36px',
             borderRadius: 'var(--radius-sm)',
-            background: 'rgba(99, 102, 241, 0.15)',
+            background: 'rgba(79, 70, 229, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -175,45 +175,44 @@ export default function SettingsView({
             <RefreshCw size={20} color="var(--accent-indigo)" />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
-              Automatic Telemetry Sync Interval
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-heading)' }}>
+              Real-Time Polling Frequency
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Frequency at which the dashboard fan-outs queries for fresh partition reports
+              Control how frequently the dashboard queries coordinator /api/report
             </p>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {[
-            { label: 'Manual (Disabled)', val: 0 },
-            { label: 'Every 3 Seconds', val: 3000 },
-            { label: 'Every 5 Seconds (Default)', val: 5000 },
-            { label: 'Every 10 Seconds', val: 10000 },
-            { label: 'Every 30 Seconds', val: 30000 }
-          ].map((item) => (
+            { label: 'Hyper-Fast (2s)', value: 2000 },
+            { label: 'Standard (5s)', value: 5000 },
+            { label: 'Conservative (10s)', value: 10000 },
+            { label: 'Manual Only', value: 0 }
+          ].map((opt) => (
             <button
-              key={item.val}
+              key={opt.value}
               type="button"
-              className={`btn ${pollingInterval === item.val ? 'btn-primary' : 'btn-secondary'}`}
+              className={pollingInterval === opt.value ? 'btn btn-primary' : 'btn btn-secondary'}
               style={{ padding: '0.5rem 1rem', fontSize: '0.825rem' }}
-              onClick={() => onPollingChange(item.val)}
+              onClick={() => onPollingChange(opt.value)}
             >
-              {item.label}
+              {opt.label}
             </button>
           ))}
         </div>
 
         {lastUpdated && (
           <p style={{ marginTop: '1rem', fontSize: '0.775rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            Last Synced: {lastUpdated.toLocaleTimeString()} ({lastUpdated.toLocaleDateString()})
+            Telemetry synced at: {lastUpdated.toLocaleTimeString()} (every {pollingInterval > 0 ? `${pollingInterval / 1000}s` : 'manual refresh'})
           </p>
         )}
       </div>
 
       {/* 3. Distributed Architecture Cloud Topology Reference */}
       <div className="table-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>
+        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '0.5rem' }}>
           Production Deployment Infrastructure Topology
         </h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
@@ -230,7 +229,7 @@ export default function SettingsView({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
               <Globe size={18} color="var(--accent-cyan)" />
-              <strong style={{ color: '#fff', fontSize: '0.9rem' }}>Vercel Edge Platform</strong>
+              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Vercel Edge Platform</strong>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Hosts the React 19 + Vite Operations Dashboard globally on edge CDN with sub-second asset delivery.
@@ -246,7 +245,7 @@ export default function SettingsView({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
               <Cpu size={18} color="var(--accent-indigo)" />
-              <strong style={{ color: '#fff', fontSize: '0.9rem' }}>Railway Cluster Service</strong>
+              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Railway Cluster Service</strong>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Runs the 3 Autonomous Zone Nodes (Ports 8081-8083) and the Central Coordinator Gateway (Port 8080).
@@ -262,7 +261,7 @@ export default function SettingsView({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
               <Database size={18} color="var(--status-online)" />
-              <strong style={{ color: '#fff', fontSize: '0.9rem' }}>Render Cloud PostgreSQL</strong>
+              <strong style={{ color: 'var(--text-heading)', fontSize: '0.9rem' }}>Render Cloud PostgreSQL</strong>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Managed PostgreSQL 15 providing ACID transactions, foreign keys, and durable recovery across crashes.

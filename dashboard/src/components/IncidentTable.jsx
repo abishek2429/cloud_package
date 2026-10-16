@@ -260,7 +260,7 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
 
                   {/* Hospital */}
                   <td>
-                    <span className="status-badge" style={{ background: 'var(--bg-surface-elevated)', color: '#fff', fontSize: '0.75rem', fontWeight: 600 }}>
+                    <span className="status-badge" style={{ background: 'var(--bg-surface-elevated)', color: 'var(--text-main)', fontSize: '0.75rem', fontWeight: 600, border: '1px solid var(--border-subtle)' }}>
                       {hospitalNames[incident.zoneId?.toUpperCase()] || incident.zoneId}
                     </span>
                   </td>

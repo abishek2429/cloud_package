@@ -129,8 +129,8 @@ export default function IncidentForm({ onIncidentSubmitted }) {
     <div className="form-card" id="incident-submission-form-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Ambulance size={20} color="#f87171" />
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>
+          <Ambulance size={20} color="#dc2626" />
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-heading)' }}>
             Dispatch Critical Emergency Patient
           </h3>
         </div>
@@ -167,10 +167,10 @@ export default function IncidentForm({ onIncidentSubmitted }) {
       {formError && (
         <div style={{
           padding: '0.65rem 0.85rem',
-          background: 'rgba(239, 68, 68, 0.1)',
+          background: 'var(--status-offline-bg)',
           border: '1px solid var(--status-offline-border)',
           borderRadius: 'var(--radius-sm)',
-          color: '#fca5a5',
+          color: 'var(--status-offline)',
           fontSize: '0.8rem',
           marginBottom: '1rem',
           display: 'flex',
@@ -185,10 +185,10 @@ export default function IncidentForm({ onIncidentSubmitted }) {
       {successFeedback && (
         <div style={{
           padding: '0.65rem 0.85rem',
-          background: 'rgba(16, 185, 129, 0.1)',
+          background: 'var(--status-online-bg)',
           border: '1px solid var(--status-online-border)',
           borderRadius: 'var(--radius-sm)',
-          color: '#6ee7b7',
+          color: 'var(--status-online)',
           fontSize: '0.8rem',
           marginBottom: '1rem',
           display: 'flex',

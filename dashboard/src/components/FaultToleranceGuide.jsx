@@ -47,7 +47,7 @@ export default function FaultToleranceGuide({ nodes, report }) {
               width: '36px',
               height: '36px',
               borderRadius: 'var(--radius-sm)',
-              background: 'rgba(6, 182, 212, 0.15)',
+              background: 'rgba(2, 132, 199, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -55,7 +55,7 @@ export default function FaultToleranceGuide({ nodes, report }) {
               <ShieldCheck size={20} color="var(--accent-cyan)" />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-heading)' }}>
                 Resilience & Partition Crash Demonstration
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -69,11 +69,11 @@ export default function FaultToleranceGuide({ nodes, report }) {
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.4rem 0.8rem',
-            background: isSouthOffline ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            background: isSouthOffline ? 'var(--status-offline-bg)' : 'var(--status-online-bg)',
             border: `1px solid ${isSouthOffline ? 'var(--status-offline-border)' : 'var(--status-online-border)'}`,
             borderRadius: 'var(--radius-full)',
             fontSize: '0.75rem',
-            color: isSouthOffline ? '#f87171' : 'var(--status-online)'
+            color: isSouthOffline ? 'var(--status-offline)' : 'var(--status-online)'
           }}>
             <span className="pulsing-dot" />
             <span>South Status: <strong>{isSouthOffline ? 'PARTITION OFFLINE' : 'ONLINE (READY)'}</strong></span>
@@ -86,14 +86,17 @@ export default function FaultToleranceGuide({ nodes, report }) {
             <div className="step-num" style={{
               borderColor: hasSouthIncidents ? 'var(--status-online)' : 'var(--accent-cyan)',
               color: hasSouthIncidents ? 'var(--status-online)' : 'var(--accent-cyan)',
-              background: hasSouthIncidents ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-surface-elevated)'
+              background: hasSouthIncidents ? 'rgba(5, 150, 105, 0.1)' : 'var(--bg-surface-elevated)'
             }}>
-              {hasSouthIncidents ? '✓' : '1'}
+              {hasSouthIncidents ? <Check size={14} /> : '1'}
             </div>
             <div className="step-content" style={{ flex: 1 }}>
-              <h5>Step 1: Ingest an Incident into South Zone</h5>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h5>Step 1: Dispatch Emergency Patients to South Hospital</h5>
+                <span className="status-badge low" style={{ fontSize: '0.65rem' }}>Prerequisite</span>
+              </div>
               <p>
-                Navigate to the <strong>Incidents Command</strong> tab and report a test incident targeting <strong>SOUTH</strong> (or use the ⚡ Seed All 3 Zones button). The record is committed directly to PostgreSQL.
+                Navigate to <strong>Emergency Triage</strong> and dispatch a trauma patient to South Memorial Hospital. This verifies that PostgreSQL has saved an initial baseline record.
               </p>
             </div>
           </div>
@@ -101,43 +104,47 @@ export default function FaultToleranceGuide({ nodes, report }) {
           {/* Step 2 */}
           <div className="demo-step" style={{ padding: '0.85rem 0' }}>
             <div className="step-num" style={{
-              borderColor: isSouthOffline ? 'var(--status-offline)' : 'var(--border-medium)',
-              color: isSouthOffline ? 'var(--status-offline)' : 'var(--text-muted)',
-              background: isSouthOffline ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface-elevated)'
+              borderColor: isSouthOffline ? 'var(--status-offline)' : 'var(--accent-cyan)',
+              color: isSouthOffline ? 'var(--status-offline)' : 'var(--accent-cyan)',
+              background: isSouthOffline ? 'rgba(220, 38, 38, 0.1)' : 'var(--bg-surface-elevated)'
             }}>
-              {isSouthOffline ? '✓' : '2'}
+              {isSouthOffline ? <AlertTriangle size={14} /> : '2'}
             </div>
             <div className="step-content" style={{ flex: 1 }}>
-              <h5>Step 2: Simulate Node Failure (Stop South Zone)</h5>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h5>Step 2: Simulate Outage / Crash South Hospital Node</h5>
+                <span className={`status-badge ${isSouthOffline ? 'offline' : 'medium'}`} style={{ fontSize: '0.65rem' }}>
+                  {isSouthOffline ? 'Partition Active' : 'Action Required'}
+                </span>
+              </div>
               <p>
-                Run this command in PowerShell or terminal to trigger an abrupt container partition crash:
+                In your terminal, stop the South container to simulate a fiber cut or network partition:
               </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
-                <span className="code-snippet">docker compose stop zone-south</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
+                <code className="code-snippet">docker stop zone-south</code>
                 <button
+                  type="button"
                   className="btn btn-secondary btn-sm"
-                  onClick={() => copyToClipboard('docker compose stop zone-south', 'cmd-stop')}
-                  style={{ padding: '0.25rem 0.6rem', fontSize: '0.725rem' }}
+                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                  onClick={() => copyToClipboard('docker stop zone-south', 'step2')}
                 >
-                  {copiedCmd === 'cmd-stop' ? <Check size={12} color="var(--status-online)" /> : <Copy size={12} />}
-                  <span>{copiedCmd === 'cmd-stop' ? 'Copied' : 'Copy Command'}</span>
+                  {copiedCmd === 'step2' ? <Check size={12} color="var(--status-online)" /> : <Copy size={12} />}
+                  <span>{copiedCmd === 'step2' ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
+              <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <em>What happens:</em> Coordinator requires <strong>2 consecutive probe timeouts</strong> before flipping South to OFFLINE (hysteresis defense against flappy networks).
+              </p>
             </div>
           </div>
 
           {/* Step 3 */}
           <div className="demo-step" style={{ padding: '0.85rem 0' }}>
-            <div className="step-num" style={{
-              borderColor: isSouthOffline ? 'var(--status-degraded)' : 'var(--border-medium)',
-              color: isSouthOffline ? 'var(--status-degraded)' : 'var(--text-muted)'
-            }}>
-              {isSouthOffline ? '✓' : '3'}
-            </div>
+            <div className="step-num">3</div>
             <div className="step-content" style={{ flex: 1 }}>
-              <h5>Step 3: Observe Hysteresis & Partial Degradation</h5>
+              <h5>Step 3: Observe Graceful Degradation in Coordinator</h5>
               <p>
-                After 2 consecutive failed health probes (10s), the system marks South as <strong>OFFLINE</strong> and the system status transitions to <strong style={{ color: 'var(--status-degraded)' }}>PARTIALLY_DEGRADED</strong>. <strong>North and Central continue serving live incidents with zero failure!</strong>
+                Notice the status flips from <code>HEALTHY</code> to <code>PARTIALLY_DEGRADED</code>. The system does <strong>not crash</strong>: North Trauma and Central General continue accepting admissions without interruption.
               </p>
             </div>
           </div>
@@ -146,34 +153,38 @@ export default function FaultToleranceGuide({ nodes, report }) {
           <div className="demo-step" style={{ padding: '0.85rem 0' }}>
             <div className="step-num">4</div>
             <div className="step-content" style={{ flex: 1 }}>
-              <h5>Step 4: Restart Container & Verify Zero Data Loss</h5>
+              <h5>Step 4: Restore South Hospital Node</h5>
               <p>
-                Start the South container back up. Once 2 consecutive healthy pings pass, South automatically re-joins the scatter-gather pool and all previous incidents load seamlessly from PostgreSQL:
+                Restart the stopped hospital partition container:
               </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
-                <span className="code-snippet">docker compose start zone-south</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
+                <code className="code-snippet">docker start zone-south</code>
                 <button
+                  type="button"
                   className="btn btn-secondary btn-sm"
-                  onClick={() => copyToClipboard('docker compose start zone-south', 'cmd-start')}
-                  style={{ padding: '0.25rem 0.6rem', fontSize: '0.725rem' }}
+                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                  onClick={() => copyToClipboard('docker start zone-south', 'step4')}
                 >
-                  {copiedCmd === 'cmd-start' ? <Check size={12} color="var(--status-online)" /> : <Copy size={12} />}
-                  <span>{copiedCmd === 'cmd-start' ? 'Copied' : 'Copy Command'}</span>
+                  {copiedCmd === 'step4' ? <Check size={12} color="var(--status-online)" /> : <Copy size={12} />}
+                  <span>{copiedCmd === 'step4' ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
+              <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <em>Durable Persistence:</em> All patient admission records survive intact from PostgreSQL, and South returns to ONLINE upon 2 successful health probes.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. Viva Defense & Distributed Principles Cards */}
+      {/* 2. Distributed Systems Theory & Viva Defense Cards */}
       <section className="table-card" style={{ padding: '1.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
           <div style={{
             width: '36px',
             height: '36px',
             borderRadius: 'var(--radius-sm)',
-            background: 'rgba(99, 102, 241, 0.15)',
+            background: 'rgba(79, 70, 229, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -181,7 +192,7 @@ export default function FaultToleranceGuide({ nodes, report }) {
             <BookOpen size={20} color="var(--accent-indigo)" />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-heading)' }}>
               Distributed Systems Theory & Viva Defense
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -205,14 +216,14 @@ export default function FaultToleranceGuide({ nodes, report }) {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ color: '#fff', fontSize: '0.875rem' }}>{dp.title}</strong>
+                <strong style={{ color: 'var(--text-heading)', fontSize: '0.875rem' }}>{dp.title}</strong>
                 <span style={{
                   fontSize: '0.65rem',
                   padding: '0.15rem 0.45rem',
                   borderRadius: 'var(--radius-full)',
-                  background: 'rgba(6, 182, 212, 0.12)',
+                  background: 'rgba(2, 132, 199, 0.1)',
                   color: 'var(--accent-cyan)',
-                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  border: '1px solid rgba(2, 132, 199, 0.25)',
                   fontWeight: 600
                 }}>
                   {dp.badge}
