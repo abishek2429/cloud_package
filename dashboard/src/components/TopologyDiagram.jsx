@@ -1,5 +1,5 @@
 import React from 'react';
-import { Network, Database, ArrowDown, Activity, Wifi, WifiOff, HardDrive, Cpu, Radio } from 'lucide-react';
+import { Network, Database, ArrowDown, Hospital, Activity, Radio, Cpu, HeartPulse } from 'lucide-react';
 
 export default function TopologyDiagram({ nodes, systemStatus }) {
   const getNode = (id) => nodes?.find(n => n.zoneId?.toUpperCase() === id.toUpperCase());
@@ -8,10 +8,11 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
   const central = getNode('CENTRAL');
   const south = getNode('SOUTH');
 
-  const renderNodePill = (node, defaultName, defaultPort, zoneKey, label) => {
+  const renderHospitalPill = (node, hospitalName, defaultPort, zoneKey, facilityType, totalBeds) => {
     const isOnline = node?.status === 'ONLINE';
     const latency = node?.responseTimeMs ?? 0;
     const incidents = node?.incidentCount ?? 0;
+    const availableBeds = Math.max(0, totalBeds - incidents);
 
     return (
       <div
@@ -22,20 +23,22 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Radio size={14} color={isOnline ? 'var(--status-online)' : 'var(--status-offline)'} className={isOnline ? 'pulsing-icon' : ''} />
             <span style={{ fontWeight: 700, fontSize: '0.875rem', color: isOnline ? '#fff' : '#fca5a5' }}>
-              {label} ({defaultName})
+              {hospitalName}
             </span>
           </div>
           <span className={`status-badge ${isOnline ? 'online' : 'offline'}`} style={{ padding: '0.15rem 0.45rem', fontSize: '0.625rem' }}>
-            {isOnline ? 'ONLINE' : 'OFFLINE'}
+            {isOnline ? 'ONLINE' : 'ISOLATED'}
           </span>
         </div>
 
         <div style={{ fontSize: '0.725rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-          Port {defaultPort} • {isOnline ? `${latency} ms latency` : 'Unreachable'}
+          Port {defaultPort} • {facilityType}
         </div>
 
         <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: isOnline ? 'var(--text-secondary)' : '#f87171' }}>
-          {isOnline ? `${incidents} Persisted Incidents` : (node?.errorMessage || 'Connection Timed Out')}
+          {isOnline
+            ? `${availableBeds}/${totalBeds} ICU Beds Available • ${incidents} Patients Admitted (${latency}ms)`
+            : (node?.errorMessage || 'Telemetry Connection Timed Out')}
         </div>
       </div>
     );
@@ -44,12 +47,12 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
   const getSystemStatusBadge = () => {
     const status = systemStatus?.toUpperCase() || 'HEALTHY';
     if (status === 'HEALTHY') {
-      return <span className="status-badge healthy" style={{ fontSize: '0.7rem' }}>HEALTHY • 3/3 PARTITIONS ONLINE</span>;
+      return <span className="status-badge healthy" style={{ fontSize: '0.7rem' }}>HEALTHY • ALL 3 HOSPITALS DISPATCHING</span>;
     }
     if (status === 'PARTIALLY_DEGRADED') {
-      return <span className="status-badge partially-degraded" style={{ fontSize: '0.7rem' }}>PARTIALLY DEGRADED • PARTIAL SERVICE ACTIVE</span>;
+      return <span className="status-badge partially-degraded" style={{ fontSize: '0.7rem' }}>SURGE REROUTED • HOSPITAL PARTITION ISOLATED</span>;
     }
-    return <span className="status-badge critical" style={{ fontSize: '0.7rem' }}>CRITICAL • MULTIPLE PARTITIONS OFFLINE</span>;
+    return <span className="status-badge critical" style={{ fontSize: '0.7rem' }}>CRITICAL • METROPOLITAN EMS COMMUNICATIONS OUTAGE</span>;
   };
 
   return (
@@ -60,41 +63,41 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
             width: '32px',
             height: '32px',
             borderRadius: 'var(--radius-sm)',
-            background: 'rgba(6, 182, 212, 0.15)',
+            background: 'rgba(239, 68, 68, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <Network size={18} color="var(--accent-cyan)" />
+            <HeartPulse size={18} color="#f87171" />
           </div>
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
-              Distributed Cluster Topology & Telemetry Flow
+              Metropolitan Hospital Network & Triage Flow
             </h3>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              Non-blocking scatter-gather scatter/gather fan-out over HTTP REST
+              Scatter-Gather ambulance dispatch & triage telemetry over distributed HTTP REST
             </p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            Network: traffic-incident-network
+            Network: medical-emergency-network
           </span>
           {getSystemStatusBadge()}
         </div>
       </div>
 
       <div className="topology-container">
-        {/* Central Coordinator Hub */}
+        {/* Central Dispatch Coordinator Hub */}
         <div className="coordinator-hub">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
             <Cpu size={18} color="var(--accent-cyan)" />
-            <h4>Coordinator Service (Port 8080)</h4>
+            <h4>Central Emergency Medical Dispatch Coordinator (Port 8080)</h4>
           </div>
-          <p>Scatter-Gather Aggregator (Promise.allSettled) • Hysteresis Thresholds: 2 Probes • Bounded Retry (3 attempts)</p>
+          <p>Scatter-Gather Triage Engine (Promise.allSettled) • Hysteresis Anti-Flapping Monitor • Bounded Retries (3 attempts)</p>
         </div>
 
-        {/* Dynamic Branch Lines with Flow Animation */}
+        {/* Dynamic Telemetry Lines with Pulsing Arrows */}
         <div style={{ width: '88%', height: '3px', background: 'var(--border-medium)', position: 'relative', borderRadius: '2px' }}>
           <div style={{
             position: 'absolute',
@@ -125,11 +128,11 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
           </div>
         </div>
 
-        {/* Three Partition Nodes */}
+        {/* Three Autonomous Regional Hospital Nodes */}
         <div className="topology-branches">
-          {renderNodePill(north, 'zone-north', '8081', 'north', 'Zone North')}
-          {renderNodePill(central, 'zone-central', '8082', 'central', 'Zone Central')}
-          {renderNodePill(south, 'zone-south', '8083', 'south', 'Zone South')}
+          {renderHospitalPill(north, 'North Trauma Center', '8081', 'north', 'Level 1 Trauma Facility', 45)}
+          {renderHospitalPill(central, 'Central General Hospital', '8082', 'central', 'University Teaching Hospital', 60)}
+          {renderHospitalPill(south, 'South Memorial Hospital', '8083', 'south', 'Regional Burn & Acute Unit', 40)}
         </div>
 
         {/* Persistence Conduits to PostgreSQL */}
@@ -146,7 +149,7 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
           boxShadow: 'var(--shadow-sm)'
         }}>
           <Database size={16} color="var(--accent-cyan)" />
-          <span><strong>PostgreSQL 15</strong> (ACID Persistence • Autonomous Connection Pooling • Durably Replicating Telemetry)</span>
+          <span><strong>PostgreSQL 15</strong> (ACID Patient Ledger • Independent Hospital Connection Pooling • Zero Data Loss)</span>
         </div>
       </div>
     </section>

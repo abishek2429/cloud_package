@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { PlusCircle, Send, Sparkles, Check, AlertCircle, Key } from 'lucide-react';
+import { PlusCircle, Send, Sparkles, Check, AlertCircle, Key, HeartPulse, Hospital, Ambulance } from 'lucide-react';
 import { submitIncident } from '../api/trafficApi';
 
 export default function IncidentForm({ onIncidentSubmitted }) {
   const [zoneId, setZoneId] = useState('NORTH');
-  const [type, setType] = useState('ACCIDENT');
+  const [type, setType] = useState('MASS_TRAUMA');
   const [severity, setSeverity] = useState('HIGH');
   const [status, setStatus] = useState('ACTIVE');
   const [description, setDescription] = useState('');
@@ -17,25 +17,25 @@ export default function IncidentForm({ onIncidentSubmitted }) {
 
   const presets = [
     {
-      title: 'North Accident',
+      title: 'North Polytrauma',
       zone: 'NORTH',
-      type: 'ACCIDENT',
+      type: 'MASS_TRAUMA',
       severity: 'HIGH',
-      desc: 'Rollover collision blocking 2 express lanes on North Highway Mile 18.'
+      desc: 'Highway 104 Multi-vehicle collision: 3 polytrauma patients in shock requiring immediate trauma resuscitation.'
     },
     {
-      title: 'Central Sinkhole',
+      title: 'Central STEMI Alert',
       zone: 'CENTRAL',
-      type: 'ROAD_CLOSED',
+      type: 'CARDIAC_ARREST',
       severity: 'HIGH',
-      desc: 'Emergency water main rupture causing street closure near Central Plaza.'
+      desc: '62yo male with acute STEMI and hemodynamic instability en route to Cardiac Catheterization Lab.'
     },
     {
-      title: 'South Harbor Jam',
+      title: 'South Flash Burn',
       zone: 'SOUTH',
-      type: 'TRAFFIC_JAM',
-      severity: 'MEDIUM',
-      desc: 'Heavy cargo truck congestion heading toward South Pier entrance.'
+      type: 'BURN_CRITICAL',
+      severity: 'HIGH',
+      desc: 'Industrial flash chemical fire: 35% total body surface area burns requiring specialized Burn ICU bed.'
     }
   ];
 
@@ -54,17 +54,20 @@ export default function IncidentForm({ onIncidentSubmitted }) {
 
     // Validation
     if (!description || description.trim().length < 5) {
-      setFormError('Incident description must be at least 5 characters long.');
+      setFormError('Emergency triage description must be at least 5 characters long.');
       return;
     }
     if (description.length > 500) {
-      setFormError('Incident description must not exceed 500 characters.');
+      setFormError('Emergency triage description must not exceed 500 characters.');
       return;
     }
 
     const payload = {
+      hospitalId: zoneId,
       zoneId,
+      conditionType: type,
       type,
+      triageLevel: severity,
       severity,
       status,
       description: description.trim()
@@ -77,7 +80,7 @@ export default function IncidentForm({ onIncidentSubmitted }) {
     try {
       setIsSubmitting(true);
       const result = await submitIncident(payload);
-      setSuccessFeedback(`Incident [${result.id}] submitted successfully to ${result.zoneId}!`);
+      setSuccessFeedback(`Emergency intake [${result.id}] dispatched successfully to ${result.zoneId}!`);
       setDescription('');
       if (!useCustomId) {
         setCustomId('');
@@ -86,7 +89,7 @@ export default function IncidentForm({ onIncidentSubmitted }) {
         onIncidentSubmitted(result);
       }
     } catch (err) {
-      setFormError(err.message || 'Failed to submit incident to coordinator');
+      setFormError(err.message || 'Failed to route emergency dispatch to coordinator');
     } finally {
       setIsSubmitting(false);
     }
@@ -100,20 +103,23 @@ export default function IncidentForm({ onIncidentSubmitted }) {
       let createdCount = 0;
       for (const preset of presets) {
         await submitIncident({
+          hospitalId: preset.zone,
           zoneId: preset.zone,
+          conditionType: preset.type,
           type: preset.type,
+          triageLevel: preset.severity,
           severity: preset.severity,
           status: 'ACTIVE',
           description: preset.desc
         });
         createdCount++;
       }
-      setSuccessFeedback(`⚡ Successfully seeded ${createdCount} live incidents across North, Central, and South partitions!`);
+      setSuccessFeedback(`⚡ Successfully dispatched ${createdCount} live trauma emergencies across North, Central, and South hospitals!`);
       if (onIncidentSubmitted) {
         onIncidentSubmitted();
       }
     } catch (err) {
-      setFormError(`Batch seeding encountered an issue: ${err.message}`);
+      setFormError(`Batch dispatch encountered an issue: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -121,11 +127,11 @@ export default function IncidentForm({ onIncidentSubmitted }) {
 
   return (
     <div className="form-card" id="incident-submission-form-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <PlusCircle size={20} color="var(--accent-cyan)" />
+          <Ambulance size={20} color="#f87171" />
           <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>
-            Report Incident
+            Dispatch Critical Emergency Patient
           </h3>
         </div>
         <button
@@ -134,9 +140,9 @@ export default function IncidentForm({ onIncidentSubmitted }) {
           style={{ fontSize: '0.725rem', padding: '0.25rem 0.6rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
           onClick={handleBatchSeed}
           disabled={isSubmitting}
-          title="Instantly dispatch 3 sample incidents (one to North, Central, South) for demo"
+          title="Instantly dispatch 3 critical emergencies (one to North Trauma, Central General, South Memorial)"
         >
-          ⚡ Seed All 3 Zones
+          ⚡ Seed All 3 Hospitals
         </button>
       </div>
 
@@ -144,7 +150,7 @@ export default function IncidentForm({ onIncidentSubmitted }) {
       <div className="preset-pills-row">
         <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           <Sparkles size={12} color="var(--accent-cyan)" />
-          Presets:
+          Quick Triage Scenarios:
         </span>
         {presets.map((p, idx) => (
           <button
@@ -196,126 +202,125 @@ export default function IncidentForm({ onIncidentSubmitted }) {
 
       <form onSubmit={handleSubmit} id="incident-form">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          {/* Target Zone */}
+          {/* Target Hospital */}
           <div className="form-group">
-            <label className="form-label" htmlFor="form-zone-select">Target Zone</label>
+            <label className="form-label" htmlFor="form-zone-select">Assigned Hospital Facility</label>
             <select
               id="form-zone-select"
               className="select-control"
               value={zoneId}
               onChange={(e) => setZoneId(e.target.value)}
             >
-              <option value="NORTH">NORTH — North District</option>
-              <option value="CENTRAL">CENTRAL — Central District</option>
-              <option value="SOUTH">SOUTH — South District</option>
+              <option value="NORTH">NORTH — North Trauma Center (Level 1)</option>
+              <option value="CENTRAL">CENTRAL — Central General Hospital</option>
+              <option value="SOUTH">SOUTH — South Memorial Hospital (Burn Unit)</option>
             </select>
           </div>
 
-          {/* Incident Type */}
+          {/* Emergency Condition Type */}
           <div className="form-group">
-            <label className="form-label" htmlFor="form-type-select">Incident Type</label>
+            <label className="form-label" htmlFor="form-type-select">Emergency Clinical Condition</label>
             <select
               id="form-type-select"
               className="select-control"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
-              <option value="ACCIDENT">ACCIDENT</option>
-              <option value="TRAFFIC_JAM">TRAFFIC_JAM</option>
-              <option value="ROAD_CLOSED">ROAD_CLOSED</option>
+              <option value="MASS_TRAUMA">MASS_TRAUMA (Polytrauma / Collision)</option>
+              <option value="CARDIAC_ARREST">CARDIAC_ARREST (Acute STEMI)</option>
+              <option value="RESPIRATORY_FAILURE">RESPIRATORY_FAILURE (Needs Ventilator)</option>
+              <option value="SURGICAL_EMERGENCY">SURGICAL_EMERGENCY (Internal Hemorrhage)</option>
+              <option value="BURN_CRITICAL">BURN_CRITICAL (Chemical / Thermal Flash)</option>
+              <option value="STROKE_ALERT">STROKE_ALERT (Acute Ischemia)</option>
             </select>
           </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          {/* Severity */}
+          {/* Triage Severity */}
           <div className="form-group">
-            <label className="form-label" htmlFor="form-severity-select">Severity Level</label>
+            <label className="form-label" htmlFor="form-severity-select">Triage Category (Priority)</label>
             <select
               id="form-severity-select"
               className="select-control"
               value={severity}
               onChange={(e) => setSeverity(e.target.value)}
             >
-              <option value="HIGH">HIGH (Severe)</option>
-              <option value="MEDIUM">MEDIUM (Moderate)</option>
-              <option value="LOW">LOW (Minor)</option>
+              <option value="HIGH">🔴 RED — Immediate Life Threat (High)</option>
+              <option value="MEDIUM">🟡 YELLOW — Urgent Stabilization (Medium)</option>
+              <option value="LOW">🟢 GREEN — Ambulatory / Minor (Low)</option>
             </select>
           </div>
 
-          {/* Operational Status */}
+          {/* Admission Lifecycle Status */}
           <div className="form-group">
-            <label className="form-label" htmlFor="form-status-select">Initial Status</label>
+            <label className="form-label" htmlFor="form-status-select">Dispatch / Care Status</label>
             <select
               id="form-status-select"
               className="select-control"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INVESTIGATING">INVESTIGATING</option>
-              <option value="RESOLVED">RESOLVED</option>
+              <option value="ACTIVE">ACTIVE — En Route / In-Transit</option>
+              <option value="INVESTIGATING">INVESTIGATING — Admitted in Triage Bay</option>
+              <option value="RESOLVED">RESOLVED — ICU Stabilized / Bed Allocated</option>
             </select>
           </div>
         </div>
 
-        {/* Custom Idempotency Key Option */}
+        {/* Clinical Case Description */}
+        <div className="form-group">
+          <label className="form-label" htmlFor="form-desc-input">Clinical Triage Description</label>
+          <textarea
+            id="form-desc-input"
+            className="textarea-control"
+            rows={3}
+            placeholder="Document patient vitals, trauma mechanism, and immediate specialty operating requirements..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={500}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+            <span>Min 5 chars • Stored durably in hospital PostgreSQL ledger</span>
+            <span>{description.length} / 500</span>
+          </div>
+        </div>
+
+        {/* Client Idempotency Key Toggle */}
         <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.775rem', color: 'var(--text-secondary)' }}>
             <input
               type="checkbox"
-              id="toggle-custom-id"
               checked={useCustomId}
               onChange={(e) => setUseCustomId(e.target.checked)}
             />
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Key size={13} color="var(--accent-cyan)" />
-              <span>Specify Custom ID (Test Duplicate Detection / Idempotency)</span>
-            </span>
+            <Key size={13} color="var(--accent-cyan)" />
+            <span>Assign Explicit Idempotency Key (Prevents Duplicate Hospital Admission)</span>
           </label>
 
           {useCustomId && (
-            <input
-              type="text"
-              id="form-custom-id-input"
-              className="input-control"
-              style={{ width: '100%', marginTop: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}
-              placeholder="e.g. INC-SOUTH-IDEM-999"
-              value={customId}
-              onChange={(e) => setCustomId(e.target.value)}
-            />
+            <div style={{ marginTop: '0.5rem' }}>
+              <input
+                type="text"
+                className="input-control"
+                placeholder="e.g. EMS-NORTH-90214-A"
+                value={customId}
+                onChange={(e) => setCustomId(e.target.value)}
+                style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+              />
+            </div>
           )}
-        </div>
-
-        {/* Description */}
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="form-label" htmlFor="form-description-input">Description</label>
-            <span style={{ fontSize: '0.7rem', color: description.length > 480 ? '#f87171' : 'var(--text-muted)' }}>
-              {description.length} / 500
-            </span>
-          </div>
-          <textarea
-            id="form-description-input"
-            className="textarea-control"
-            rows="3"
-            placeholder="Describe the incident location, cause, lane impact..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
-          id="submit-incident-btn"
           className="btn btn-primary"
-          style={{ width: '100%' }}
-          disabled={isSubmitting || description.trim().length < 5}
+          style={{ width: '100%', padding: '0.65rem' }}
+          disabled={isSubmitting}
         >
           <Send size={15} />
-          <span>{isSubmitting ? 'Routing via Coordinator...' : 'Submit Incident to Cluster'}</span>
+          <span>{isSubmitting ? 'Routing Through Dispatch Coordinator...' : 'Dispatch Emergency Admission'}</span>
         </button>
       </form>
     </div>

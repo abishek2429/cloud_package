@@ -1,16 +1,16 @@
-# Distributed Traffic Incident Monitoring System (Node.js Edition)
+# PulseGrid — Distributed Emergency Medical & Hospital Surge Network
 
-A resilient, partitioned distributed backend and real-time visualization platform built with **Node.js 20+ (ES Modules)**, **Express.js**, **PostgreSQL 15 (`pg` connection pool)**, **Docker Compose**, and **React 19 (Vite)**.
+A resilient, partitioned distributed emergency healthcare platform built with **Node.js 20+ (ES Modules)**, **Express.js**, **PostgreSQL 15 (`pg` connection pool)**, **Docker Compose**, and **React 19 (Vite)**.
 
-The system partitions a metropolitan area into independent autonomous zones (**North**, **Central**, **South**) that store traffic telemetry durably in **PostgreSQL**. A central **Coordinator Service** queries and aggregates city-wide telemetry over HTTP with background **periodic health checks**, **hysteresis failure/recovery thresholds**, **bounded retries with exponential backoff**, **duplicate submission detection**, and **durable recovery across node crashes**.
+During major metropolitan emergencies (mass casualty incidents, power grid blackouts, natural disasters), centralized communications often fail. PulseGrid partitions the city into independent autonomous hospital centers (**North Trauma Center**, **Central General Hospital**, **South Memorial Hospital**) that store clinical triage admissions and ICU capacity durably in **PostgreSQL**. A central **Emergency Medical Dispatch Coordinator** queries and aggregates city-wide bed availability over HTTP with background **periodic health checks**, **hysteresis failure/recovery thresholds**, **bounded retries with exponential backoff**, **duplicate patient intake prevention**, and **durable recovery across hospital partition outages**.
 
 ---
 
 ## 1. Project Documentation Index
 
 Comprehensive engineering documents are organized under [`docs/`](file:///d:/cloud_package/docs):
-- [`docs/architecture.md`](file:///d:/cloud_package/docs/architecture.md) — Detailed coordinator, partition nodes, Docker network, and Mermaid sequence diagrams.
-- [`docs/system-design.md`](file:///d:/cloud_package/docs/system-design.md) — System workflows, distributed principles, design decisions, and limitations.
+- [`docs/architecture.md`](file:///d:/cloud_package/docs/architecture.md) — Detailed coordinator, hospital partition nodes, Docker network, and Mermaid sequence diagrams.
+- [`docs/system-design.md`](file:///d:/cloud_package/docs/system-design.md) — System workflows, distributed healthcare principles, design decisions, and limitations.
 - [`docs/test-cases.md`](file:///d:/cloud_package/docs/test-cases.md) — Test specifications (10 automated unit tests + 5 live E2E scenarios + manual testing checklist).
 - [`docs/viva-preparation.md`](file:///d:/cloud_package/docs/viva-preparation.md) — Comprehensive viva voce defense questions and concise answers.
 
@@ -30,14 +30,14 @@ Comprehensive engineering documents are organized under [`docs/`](file:///d:/clo
 
 ```mermaid
 flowchart TD
-    subgraph Presentation["Presentation & Operations Layer"]
-        Dashboard["React 19 Operations Dashboard<br/>(http://localhost:5173 - Vite Proxy)"]
-        CLI["PowerShell / curl CLI<br/>(Automated Dispatcher)"]
+    subgraph Presentation["Presentation & Dispatch Layer"]
+        Dashboard["React 19 Emergency Operations Dashboard<br/>(http://localhost:5173 - Vite Proxy)"]
+        EMS["EMS / Ambulance Terminal CLI<br/>(Automated Dispatcher)"]
     end
 
-    subgraph CoordinatorTier["Coordination & Aggregation Tier"]
-        Coord["coordinator-service (Port 8080)<br/>Node.js 20 / Express"]
-        ScatterGather["Scatter-Gather Engine<br/>(Promise.allSettled)"]
+    subgraph CoordinatorTier["Coordination & Triage Aggregation Tier"]
+        Coord["coordinator-service (Port 8080)<br/>Central Dispatch Gateway (Node.js 20)"]
+        ScatterGather["Scatter-Gather Triage Engine<br/>(Promise.allSettled)"]
         Hysteresis["Hysteresis Health Monitor<br/>(Threshold: 2 probes)"]
         RetryEngine["Bounded Retry Executor<br/>(Max 3 attempts, Exp Backoff)"]
         Coord --> ScatterGather
@@ -46,36 +46,36 @@ flowchart TD
     end
 
     subgraph VirtualNetwork["Docker Virtual Bridge Network (traffic-network)"]
-        subgraph PartitionTier["Autonomous Zone Partitions (Node.js 20)"]
-            ZN["zone-north (Port 8081)<br/>DNS: zone-north<br/>Partition: NORTH"]
-            ZC["zone-central (Port 8082)<br/>DNS: zone-central<br/>Partition: CENTRAL"]
-            ZS["zone-south (Port 8083)<br/>DNS: zone-south<br/>Partition: SOUTH"]
-        end
-
-        subgraph StorageTier["Persistence Tier (ACID Storage)"]
-            DB[("traffic-db (PostgreSQL 15)<br/>Port 5432 / DNS: traffic-db<br/>Named Volume: traffic-incident-db-data")]
-        end
+        subgraph PartitionTier["Autonomous Regional Hospital Partitions (Node.js 20)"]
+        ZN["zone-north (Port 8081)<br/>North Trauma Center<br/>Level 1 Facility • 45 ICU Beds"]
+        ZC["zone-central (Port 8082)<br/>Central General Hospital<br/>University Hospital • 60 ICU Beds"]
+        ZS["zone-south (Port 8083)<br/>South Memorial Hospital<br/>Acute & Burn Unit • 40 ICU Beds"]
     end
 
-    Dashboard -->|HTTP REST /api/*| Coord
-    CLI -->|HTTP REST /api/*| Coord
-    CLI -.->|Direct Ingestion| ZN
+    subgraph StorageTier["Persistence Tier (ACID Storage)"]
+        DB[("traffic-db (PostgreSQL 15)<br/>Port 5432 / Named Volume: traffic-incident-db-data")]
+    end
+end
 
-    ScatterGather -->|HTTP GET /api/incidents| ZN
-    ScatterGather -->|HTTP GET /api/incidents| ZC
-    ScatterGather -->|HTTP GET /api/incidents| ZS
+Dashboard -->|HTTP REST /api/*| Coord
+EMS -->|HTTP REST /api/*| Coord
+EMS -.->|Direct Ingestion| ZN
 
-    Hysteresis -->|HTTP GET /api/health| ZN
-    Hysteresis -->|HTTP GET /api/health| ZC
-    Hysteresis -->|HTTP GET /api/health| ZS
+ScatterGather -->|HTTP GET /api/incidents| ZN
+ScatterGather -->|HTTP GET /api/incidents| ZC
+ScatterGather -->|HTTP GET /api/incidents| ZS
 
-    RetryEngine -->|HTTP POST /api/incidents| ZN
-    RetryEngine -->|HTTP POST /api/incidents| ZC
-    RetryEngine -->|HTTP POST /api/incidents| ZS
+Hysteresis -->|HTTP GET /api/health| ZN
+Hysteresis -->|HTTP GET /api/health| ZC
+Hysteresis -->|HTTP GET /api/health| ZS
 
-    ZN -->|pg Connection Pool| DB
-    ZC -->|pg Connection Pool| DB
-    ZS -->|pg Connection Pool| DB
+RetryEngine -->|HTTP POST /api/incidents| ZN
+RetryEngine -->|HTTP POST /api/incidents| ZC
+RetryEngine -->|HTTP POST /api/incidents| ZS
+
+ZN -->|pg Connection Pool| DB
+ZC -->|pg Connection Pool| DB
+ZS -->|pg Connection Pool| DB
 ```
 
 ---

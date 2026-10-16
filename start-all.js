@@ -15,8 +15,8 @@ const port = process.env.PORT || '8080';
 const dbUrl = process.env.DATABASE_URL || process.env.SPRING_DATASOURCE_URL;
 
 console.log('================================================================');
-console.log('🚀 Starting Distributed Traffic Incident Monitoring System');
-console.log(`📡 Coordinator Public Port: ${port}`);
+console.log('🏥 Starting PulseGrid - Distributed Emergency Medical & Trauma Network');
+console.log(`📡 Dispatch Coordinator Port: ${port}`);
 console.log(`🗄️ Database: ${dbUrl ? 'Configured (DATABASE_URL detected)' : 'Local Default'}`);
 console.log('================================================================');
 
@@ -45,30 +45,30 @@ function startProcess(name, scriptRelativePath, envVars = {}) {
   return child;
 }
 
-// 1. Spawn Autonomous Zone 1: North (8081)
-startProcess('Zone-North', path.join('zone-node', 'src', 'index.js'), {
+// 1. Spawn Autonomous Hospital 1: North Trauma Center (8081)
+startProcess('North-Trauma', path.join('zone-node', 'src', 'index.js'), {
   SERVER_PORT: '8081',
   PORT: '8081',
   ZONE_ID: 'NORTH',
-  ZONE_NAME: 'North District',
+  ZONE_NAME: 'North Trauma Center',
   ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
 });
 
-// 2. Spawn Autonomous Zone 2: Central (8082)
-startProcess('Zone-Central', path.join('zone-node', 'src', 'index.js'), {
+// 2. Spawn Autonomous Hospital 2: Central General Hospital (8082)
+startProcess('Central-General', path.join('zone-node', 'src', 'index.js'), {
   SERVER_PORT: '8082',
   PORT: '8082',
   ZONE_ID: 'CENTRAL',
-  ZONE_NAME: 'Central District',
+  ZONE_NAME: 'Central General Hospital',
   ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
 });
 
-// 3. Spawn Autonomous Zone 3: South (8083)
-startProcess('Zone-South', path.join('zone-node', 'src', 'index.js'), {
+// 3. Spawn Autonomous Hospital 3: South Memorial Hospital (8083)
+startProcess('South-Memorial', path.join('zone-node', 'src', 'index.js'), {
   SERVER_PORT: '8083',
   PORT: '8083',
   ZONE_ID: 'SOUTH',
-  ZONE_NAME: 'South District',
+  ZONE_NAME: 'South Memorial Hospital',
   ...(dbUrl ? { DATABASE_URL: dbUrl } : {}),
 });
 

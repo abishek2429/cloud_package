@@ -23,19 +23,27 @@ export async function aggregateCityReport() {
 
   results.forEach((outcome, idx) => {
     const zone = configuredZones[idx];
+    const zoneBeds = zone.totalIcuBeds || 45;
     if (outcome.status === 'fulfilled' && outcome.value.success) {
       const data = outcome.value;
       respondingZones.push(zone.id);
+      const incCount = Array.isArray(data.incidents) ? data.incidents.length : 0;
+      const activeIncCount = Array.isArray(data.incidents) ? data.incidents.filter((i) => i.status !== 'RESOLVED').length : 0;
       if (Array.isArray(data.incidents)) {
         allIncidents.push(...data.incidents);
       }
       nodeStatuses.push({
         zoneId: zone.id,
         zoneName: zone.name,
+        hospitalName: zone.hospitalName || zone.name,
+        facilityType: zone.facilityType || 'Emergency Trauma Center',
+        totalIcuBeds: zoneBeds,
+        availableIcuBeds: Math.max(0, zoneBeds - activeIncCount),
+        oxygenLevelPct: 98,
         url: zone.url,
         status: 'ONLINE',
         responseTimeMs: data.responseTimeMs,
-        incidentCount: Array.isArray(data.incidents) ? data.incidents.length : 0,
+        incidentCount: incCount,
         errorMessage: null,
       });
     } else {
@@ -45,13 +53,18 @@ export async function aggregateCityReport() {
       nodeStatuses.push({
         zoneId: zone.id,
         zoneName: zone.name,
+        hospitalName: zone.hospitalName || zone.name,
+        facilityType: zone.facilityType || 'Emergency Trauma Center',
+        totalIcuBeds: zoneBeds,
+        availableIcuBeds: 0,
+        oxygenLevelPct: 0,
         url: zone.url,
         status: 'OFFLINE',
         responseTimeMs: outcome.status === 'fulfilled' ? outcome.value.responseTimeMs : 0,
         incidentCount: 0,
         errorMessage: errorMsg,
       });
-      console.warn(`[Aggregator] Degraded aggregation: Zone [${zone.id}] is unavailable (Reason: ${errorMsg})`);
+      console.warn(`[Aggregator] Degraded aggregation: Hospital [${zone.id}] is unavailable (Reason: ${errorMsg})`);
     }
   });
 
@@ -66,21 +79,31 @@ export async function aggregateCityReport() {
     systemStatus = 'PARTIALLY_DEGRADED';
   }
 
+  const activeCount = allIncidents.filter((i) => i.status === 'ACTIVE').length;
+  const investigatingCount = allIncidents.filter((i) => i.status === 'INVESTIGATING').length;
+  const resolvedCount = allIncidents.filter((i) => i.status === 'RESOLVED').length;
+  const totalBeds = nodeStatuses.reduce((acc, curr) => acc + (curr.totalIcuBeds || 0), 0);
+  const availableBeds = nodeStatuses.reduce((acc, curr) => acc + (curr.status === 'ONLINE' ? (curr.availableIcuBeds || 0) : 0), 0);
+
   const report = {
     totalIncidents: allIncidents.length,
-    activeIncidents: allIncidents.filter((i) => i.status === 'ACTIVE').length,
-    investigatingIncidents: allIncidents.filter((i) => i.status === 'INVESTIGATING').length,
-    resolvedIncidents: allIncidents.filter((i) => i.status === 'RESOLVED').length,
+    activeIncidents: activeCount,
+    investigatingIncidents: investigatingCount,
+    resolvedIncidents: resolvedCount,
     highSeverityCount: allIncidents.filter((i) => i.severity === 'HIGH').length,
     mediumSeverityCount: allIncidents.filter((i) => i.severity === 'MEDIUM').length,
     lowSeverityCount: allIncidents.filter((i) => i.severity === 'LOW').length,
     totalConfiguredZones: configuredZones.length,
+    totalIcuBeds: totalBeds,
+    availableIcuBeds: availableBeds,
     respondingZones,
     unavailableZones,
     systemStatus,
     generatedAt: new Date().toISOString(),
     incidents: allIncidents,
+    emergencies: allIncidents,
     nodeStatuses,
+    hospitalStatuses: nodeStatuses,
     nodeErrors,
   };
 

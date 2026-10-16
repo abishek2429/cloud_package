@@ -61,29 +61,29 @@ export default function Header({
   const navItems = [
     {
       id: 'overview',
-      label: 'Operations Overview',
+      label: 'Hospital Network',
       icon: LayoutDashboard,
     },
     {
       id: 'incidents',
-      label: 'Incidents Command',
+      label: 'Emergency Triage',
       icon: AlertTriangle,
       badge: incidentCount > 0 ? incidentCount : null,
     },
     {
       id: 'telemetry',
-      label: 'Telemetry Stream',
+      label: 'Medical Telemetry',
       icon: Terminal,
       badge: logCount > 0 ? logCount : null,
     },
     {
       id: 'chaos',
-      label: 'Fault Lab & Defense',
+      label: 'Outage & Surge Lab',
       icon: ShieldAlert,
     },
     {
       id: 'settings',
-      label: 'Cluster Settings',
+      label: 'Network Settings',
       icon: SettingsIcon,
     },
   ];
@@ -93,15 +93,15 @@ export default function Header({
       {/* Upper Brand & Controls Tier */}
       <div className="header-top-tier">
         <div className="brand-section">
-          <div className="brand-icon-wrapper">
-            <Activity size={24} />
+          <div className="brand-icon-wrapper" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(6, 182, 212, 0.2))', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+            <Activity size={24} color="#f87171" />
           </div>
           <div>
             <h1 className="brand-title">
-              Traffic Incident Monitoring System
+              PulseGrid • Emergency Medical & Trauma Network
             </h1>
             <p className="brand-subtitle">
-              Resilient Distributed Metropolitan Telemetry & Partition Aggregator
+              Autonomous Multi-Hospital Partitioning & Metropolitan Emergency Surge Orchestrator
             </p>
           </div>
         </div>

@@ -191,10 +191,10 @@ export default function App() {
           }}>
             <div>
               <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>
-                Incident Command Center
+                Metropolitan Emergency Triage & Hospital Intake
               </h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Filter, inspect, export, and report incidents across North, Central, and South districts
+                Filter, inspect, export, and route critical patients across North Trauma, Central General, and South Memorial
               </p>
             </div>
 
@@ -206,7 +206,7 @@ export default function App() {
                 onClick={() => setShowReportForm(!showReportForm)}
               >
                 {showReportForm ? <X size={15} /> : <Plus size={15} />}
-                <span>{showReportForm ? 'Close Incident Form' : '+ Report New Incident'}</span>
+                <span>{showReportForm ? 'Close Dispatch Form' : '+ Dispatch Emergency Patient'}</span>
               </button>
             </div>
           </div>
@@ -268,7 +268,7 @@ export default function App() {
         color: 'var(--text-muted)',
         marginTop: '2rem'
       }}>
-        Distributed Traffic Incident Monitoring System • Node.js 20 (ESM), Express.js, PostgreSQL 15, React 19, Docker Compose & Vercel
+        PulseGrid • Distributed Emergency Medical & Hospital Surge Network • Node.js 20 (ESM), Express.js, PostgreSQL 15, React 19, Docker Compose & Vercel
       </footer>
     </div>
   );

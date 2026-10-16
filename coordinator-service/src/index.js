@@ -103,17 +103,30 @@ app.get('/api/coordinator/zones/:zoneId/health', async (req, res) => {
  */
 const handleIncidentCreation = async (req, res) => {
   try {
-    const { zoneId, type, severity, description } = req.body;
+    const zoneId = req.body.hospitalId || req.body.zoneId;
+    const type = req.body.conditionType || req.body.type;
+    const severity = req.body.triageLevel || req.body.severity;
+    const description = req.body.description;
+    const status = req.body.status || 'ACTIVE';
+
+    const normalizedBody = {
+      ...req.body,
+      zoneId,
+      type,
+      severity,
+      description,
+      status,
+    };
 
     const validationErrors = {};
     if (!zoneId) {
-      validationErrors.zoneId = 'Zone ID is required (e.g., NORTH, CENTRAL, SOUTH)';
+      validationErrors.zoneId = 'Hospital / Zone ID is required (e.g., NORTH, CENTRAL, SOUTH)';
     }
     if (!type) {
-      validationErrors.type = 'Incident type is required';
+      validationErrors.type = 'Emergency condition type is required';
     }
     if (!severity) {
-      validationErrors.severity = 'Incident severity is required (LOW, MEDIUM, HIGH)';
+      validationErrors.severity = 'Triage severity is required (HIGH/RED, MEDIUM/YELLOW, LOW/GREEN)';
     }
     if (!description || description.trim().length < 5 || description.trim().length > 500) {
       validationErrors.description = 'Description must be between 5 and 500 characters';
@@ -127,13 +140,13 @@ const handleIncidentCreation = async (req, res) => {
       });
     }
 
-    const outcome = await aggregator.routeIncidentCreation(req.body);
+    const outcome = await aggregator.routeIncidentCreation(normalizedBody);
     res.status(outcome.statusCode).json(outcome.data);
   } catch (err) {
-    console.error('[Coordinator] Incident routing failed:', err.message);
+    console.error('[Coordinator] Emergency dispatch routing failed:', err.message);
     const statusCode = err.status || 503;
     res.status(statusCode).json({
-      error: 'Target zone node unavailable',
+      error: 'Target hospital facility unavailable',
       details: err.message,
       timestamp: new Date().toISOString(),
     });
@@ -141,6 +154,10 @@ const handleIncidentCreation = async (req, res) => {
 };
 app.post('/api/coordinator/incidents', handleIncidentCreation);
 app.post('/coordinator/incidents', handleIncidentCreation);
+app.post('/api/coordinator/emergencies', handleIncidentCreation);
+app.post('/coordinator/emergencies', handleIncidentCreation);
+app.get('/api/coordinator/hospitals', handleNodes);
+app.get('/coordinator/hospitals', handleNodes);
 
 /**
  * Proxy PATCH status updates to individual zones

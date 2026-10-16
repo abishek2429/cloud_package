@@ -12,11 +12,11 @@ export default function DegradedBanner({ report }) {
         <AlertTriangle size={24} style={{ flexShrink: 0, color: 'var(--status-degraded)' }} />
         <div style={{ flex: 1 }}>
           <strong style={{ color: '#fff', display: 'block', marginBottom: '0.2rem' }}>
-            Partial Partition Degradation Detected (System Status: PARTIALLY_DEGRADED)
+            Hospital Partition Outage Detected (System Status: PARTIALLY_DEGRADED)
           </strong>
           <span>
-            Zone node partition(s) <strong style={{ color: '#fca5a5' }}>[{unavailableZones?.join(', ')}]</strong> are currently offline or unreachable. 
-            The Coordinator is employing <em>Graceful Degradation</em>: returning surviving telemetry from <strong style={{ color: '#86efac' }}>[{respondingZones?.join(', ')}]</strong> without crashing or returning an HTTP 500 error.
+            Hospital trauma node(s) <strong style={{ color: '#fca5a5' }}>[{unavailableZones?.join(', ')}]</strong> are severed or unreachable. 
+            The Emergency Dispatch Coordinator is employing <em>Graceful Partition Degradation</em>: ambulance dispatch is automatically rerouted to surviving facilities <strong style={{ color: '#86efac' }}>[{respondingZones?.join(', ')}]</strong> without service failure.
           </span>
         </div>
       </div>
@@ -29,10 +29,10 @@ export default function DegradedBanner({ report }) {
         <AlertOctagon size={24} style={{ flexShrink: 0, color: 'var(--status-offline)' }} />
         <div style={{ flex: 1 }}>
           <strong style={{ color: '#fff', display: 'block', marginBottom: '0.2rem' }}>
-            Critical Cluster Outage (System Status: CRITICAL)
+            Critical Healthcare Network Communications Collapse (Status: CRITICAL)
           </strong>
           <span>
-            All configured zone nodes are currently unreachable. Check Docker daemon and network connectivity.
+            All regional hospital nodes are currently unreachable from the central dispatch gateway. Check Docker / cloud network partitions.
           </span>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Search, Filter, AlertCircle, CheckCircle, Clock, ArrowUpDown, Download } from 'lucide-react';
+import { Table, Search, Filter, AlertCircle, CheckCircle, Clock, ArrowUpDown, Download, HeartPulse, Hospital, Check, RefreshCw } from 'lucide-react';
 import { updateIncidentStatus } from '../api/trafficApi';
 
 export default function IncidentTable({ incidents, onStatusUpdated, isLoading }) {
@@ -9,12 +9,18 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [updatingId, setUpdatingId] = useState(null);
 
+  const hospitalNames = {
+    'NORTH': 'North Trauma Center',
+    'CENTRAL': 'Central General Hospital',
+    'SOUTH': 'South Memorial Hospital'
+  };
+
   const exportToCSV = () => {
     if (!filteredIncidents.length) return;
-    const headers = ['ID', 'Zone', 'Type', 'Severity', 'Status', 'Description', 'Timestamp'];
+    const headers = ['Intake_ID', 'Hospital_Facility', 'Clinical_Condition', 'Triage_Priority', 'Care_Status', 'Clinical_Notes', 'Timestamp'];
     const rows = filteredIncidents.map(i => [
       i.id,
-      i.zoneId,
+      hospitalNames[i.zoneId?.toUpperCase()] || i.zoneId,
       i.type,
       i.severity,
       i.status,
@@ -25,7 +31,7 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `traffic_incidents_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `emergency_triage_register_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -39,18 +45,18 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
         onStatusUpdated();
       }
     } catch (err) {
-      alert(`Failed to update status for ${incident.id}: ${err.message}`);
+      alert(`Failed to update admission status for ${incident.id}: ${err.message}`);
     } finally {
       setUpdatingId(null);
     }
   };
 
   const filteredIncidents = (incidents || []).filter((item) => {
-    // Zone filter
+    // Hospital filter
     if (zoneFilter !== 'ALL' && item.zoneId?.toUpperCase() !== zoneFilter) {
       return false;
     }
-    // Severity filter
+    // Severity / Triage filter
     if (severityFilter !== 'ALL' && item.severity !== severityFilter) {
       return false;
     }
@@ -64,8 +70,9 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
       const matchId = item.id?.toLowerCase().includes(q);
       const matchDesc = item.description?.toLowerCase().includes(q);
       const matchZone = item.zoneId?.toLowerCase().includes(q);
+      const matchHospital = (hospitalNames[item.zoneId?.toUpperCase()] || '').toLowerCase().includes(q);
       const matchType = item.type?.toLowerCase().includes(q);
-      return matchId || matchDesc || matchZone || matchType;
+      return matchId || matchDesc || matchZone || matchHospital || matchType;
     }
     return true;
   });
@@ -80,29 +87,61 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
     }
   };
 
-  const getSeverityBadgeClass = (severity) => {
+  const getTriageBadge = (severity) => {
     switch (severity?.toUpperCase()) {
       case 'HIGH':
-        return 'high';
+        return (
+          <span className="status-badge critical" style={{ fontSize: '0.6875rem' }}>
+            🔴 RED (Immediate)
+          </span>
+        );
       case 'MEDIUM':
-        return 'medium';
+        return (
+          <span className="status-badge partially-degraded" style={{ fontSize: '0.6875rem' }}>
+            🟡 YELLOW (Urgent)
+          </span>
+        );
       case 'LOW':
-        return 'low';
+        return (
+          <span className="status-badge healthy" style={{ fontSize: '0.6875rem' }}>
+            🟢 GREEN (Minor)
+          </span>
+        );
       default:
-        return 'low';
+        return (
+          <span className="status-badge low" style={{ fontSize: '0.6875rem' }}>
+            {severity}
+          </span>
+        );
     }
   };
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusBadge = (status) => {
     switch (status?.toUpperCase()) {
       case 'ACTIVE':
-        return 'critical';
+        return (
+          <span className="status-badge critical" style={{ fontSize: '0.6875rem' }}>
+            In-Transit
+          </span>
+        );
       case 'INVESTIGATING':
-        return 'investigating';
+        return (
+          <span className="status-badge partially-degraded" style={{ fontSize: '0.6875rem' }}>
+            Admitted / Bay
+          </span>
+        );
       case 'RESOLVED':
-        return 'resolved';
+        return (
+          <span className="status-badge resolved" style={{ fontSize: '0.6875rem' }}>
+            ICU Stabilized
+          </span>
+        );
       default:
-        return 'healthy';
+        return (
+          <span className="status-badge healthy" style={{ fontSize: '0.6875rem' }}>
+            {status}
+          </span>
+        );
     }
   };
 
@@ -111,10 +150,10 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
       {/* Table Header with Filters */}
       <div className="table-header-bar">
         <div className="table-title">
-          <Table size={20} color="var(--accent-cyan)" />
-          <span>City-Wide Incident Register</span>
+          <HeartPulse size={20} color="#f87171" />
+          <span>Metropolitan Emergency Medical Register</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            ({filteredIncidents.length} of {incidents?.length || 0})
+            ({filteredIncidents.length} of {incidents?.length || 0} admissions)
           </span>
           <button
             type="button"
@@ -122,10 +161,10 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
             style={{ marginLeft: '0.5rem', padding: '0.2rem 0.55rem', fontSize: '0.725rem' }}
             onClick={exportToCSV}
             disabled={!filteredIncidents.length}
-            title="Download current incident register as CSV"
+            title="Download emergency triage register as CSV spreadsheet"
           >
             <Download size={13} />
-            <span>CSV</span>
+            <span>Export CSV</span>
           </button>
         </div>
 
@@ -137,14 +176,14 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
               id="search-incidents-input"
               type="text"
               className="input-control"
-              style={{ paddingLeft: '2rem', width: '180px', fontSize: '0.8rem' }}
-              placeholder="Filter by keyword / ID..."
+              style={{ paddingLeft: '2rem', width: '200px', fontSize: '0.8rem' }}
+              placeholder="Search patient / condition..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          {/* Zone Selector */}
+          {/* Hospital Selector */}
           <select
             id="filter-zone-select"
             className="select-control"
@@ -152,13 +191,13 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
             value={zoneFilter}
             onChange={(e) => setZoneFilter(e.target.value)}
           >
-            <option value="ALL">All Zones</option>
-            <option value="NORTH">North Zone</option>
-            <option value="CENTRAL">Central Zone</option>
-            <option value="SOUTH">South Zone</option>
+            <option value="ALL">All Hospitals</option>
+            <option value="NORTH">North Trauma Center</option>
+            <option value="CENTRAL">Central General Hospital</option>
+            <option value="SOUTH">South Memorial Hospital</option>
           </select>
 
-          {/* Severity Selector */}
+          {/* Triage Selector */}
           <select
             id="filter-severity-select"
             className="select-control"
@@ -166,10 +205,10 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
           >
-            <option value="ALL">All Severities</option>
-            <option value="HIGH">High Severity</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
+            <option value="ALL">All Triage Categories</option>
+            <option value="HIGH">🔴 RED (Immediate Life Threat)</option>
+            <option value="MEDIUM">🟡 YELLOW (Urgent Stabilization)</option>
+            <option value="LOW">🟢 GREEN (Minor / Ambulatory)</option>
           </select>
 
           {/* Status Selector */}
@@ -180,10 +219,10 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INVESTIGATING">INVESTIGATING</option>
-            <option value="RESOLVED">RESOLVED</option>
+            <option value="ALL">All Care Stages</option>
+            <option value="ACTIVE">In-Transit</option>
+            <option value="INVESTIGATING">Admitted / In Triage</option>
+            <option value="RESOLVED">ICU Stabilized</option>
           </select>
         </div>
       </div>
@@ -193,13 +232,13 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
         <table className="incident-table" id="incident-data-table">
           <thead>
             <tr>
-              <th>Incident ID</th>
-              <th>Zone Partition</th>
-              <th>Classification</th>
-              <th>Severity</th>
-              <th>Description</th>
-              <th>Recorded At</th>
-              <th>Status</th>
+              <th>Intake ID</th>
+              <th>Assigned Hospital</th>
+              <th>Clinical Condition</th>
+              <th>Triage Priority</th>
+              <th>Clinical Notes</th>
+              <th>Admitted At</th>
+              <th>Care Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -208,7 +247,7 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
               <tr>
                 <td colSpan="8" className="empty-state">
                   <AlertCircle size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                  <p>No traffic incident records found matching current filters.</p>
+                  <p>No emergency medical records found matching current filters.</p>
                 </td>
               </tr>
             ) : (
@@ -219,29 +258,33 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
                     {incident.id}
                   </td>
 
-                  {/* Zone */}
+                  {/* Hospital */}
                   <td>
-                    <span className="status-badge" style={{ background: 'var(--bg-surface-elevated)', color: '#fff', fontSize: '0.7rem' }}>
-                      {incident.zoneId}
+                    <span className="status-badge" style={{ background: 'var(--bg-surface-elevated)', color: '#fff', fontSize: '0.75rem', fontWeight: 600 }}>
+                      {hospitalNames[incident.zoneId?.toUpperCase()] || incident.zoneId}
                     </span>
                   </td>
 
-                  {/* Type */}
+                  {/* Condition Type */}
                   <td>
-                    <span className={`type-pill ${incident.type?.toLowerCase()}`}>
+                    <span className="type-pill" style={{
+                      background: 'rgba(6, 182, 212, 0.12)',
+                      color: 'var(--accent-cyan)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.7rem'
+                    }}>
                       {incident.type?.replace('_', ' ')}
                     </span>
                   </td>
 
-                  {/* Severity */}
+                  {/* Triage Priority */}
                   <td>
-                    <span className={`status-badge ${getSeverityBadgeClass(incident.severity)}`} style={{ fontSize: '0.6875rem' }}>
-                      {incident.severity}
-                    </span>
+                    {getTriageBadge(incident.severity)}
                   </td>
 
                   {/* Description */}
-                  <td style={{ maxWidth: '320px', lineHeight: 1.4 }}>
+                  <td style={{ maxWidth: '320px', lineHeight: 1.45, fontSize: '0.8rem' }}>
                     {incident.description}
                   </td>
 
@@ -252,37 +295,43 @@ export default function IncidentTable({ incidents, onStatusUpdated, isLoading })
 
                   {/* Status */}
                   <td>
-                    <span className={`status-badge ${getStatusBadgeClass(incident.status)}`} style={{ fontSize: '0.6875rem' }}>
-                      {incident.status}
-                    </span>
+                    {getStatusBadge(incident.status)}
                   </td>
 
-                  {/* Quick Status Action */}
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    {incident.status === 'ACTIVE' && (
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        disabled={updatingId === incident.id}
-                        onClick={() => handleStatusChange(incident, 'INVESTIGATING')}
-                        title="Mark as investigating"
-                      >
-                        Investigate
-                      </button>
-                    )}
-                    {incident.status === 'INVESTIGATING' && (
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        disabled={updatingId === incident.id}
-                        onClick={() => handleStatusChange(incident, 'RESOLVED')}
-                        title="Mark as resolved"
-                        style={{ color: 'var(--status-online)', borderColor: 'var(--status-online-border)' }}
-                      >
-                        Resolve
-                      </button>
-                    )}
-                    {incident.status === 'RESOLVED' && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Closed</span>
-                    )}
+                  {/* Action Quick Status Buttons */}
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      {incident.status === 'ACTIVE' && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                          onClick={() => handleStatusChange(incident, 'INVESTIGATING')}
+                          disabled={updatingId === incident.id}
+                        >
+                          {updatingId === incident.id ? 'Saving...' : 'Admit Bay'}
+                        </button>
+                      )}
+
+                      {incident.status === 'INVESTIGATING' && (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                          onClick={() => handleStatusChange(incident, 'RESOLVED')}
+                          disabled={updatingId === incident.id}
+                        >
+                          {updatingId === incident.id ? 'Saving...' : 'Stabilize ICU'}
+                        </button>
+                      )}
+
+                      {incident.status === 'RESOLVED' && (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--status-online)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Check size={12} />
+                          <span>Bed Secured</span>
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

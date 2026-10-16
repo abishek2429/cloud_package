@@ -25,39 +25,39 @@ export async function initializeZone() {
   if (zoneId === 'NORTH') {
     await createIncident({
       zoneId,
-      type: 'ACCIDENT',
+      type: 'MASS_TRAUMA',
       severity: 'HIGH',
-      description: 'Multi-vehicle collision on North Expressway near Mile 14',
+      description: 'Mass Casualty Highway Collision: 3 polytrauma patients admitted to Shock Trauma Bay 1',
       status: 'ACTIVE',
     });
     await createIncident({
       zoneId,
-      type: 'TRAFFIC_JAM',
-      severity: 'MEDIUM',
-      description: 'Heavy peak-hour congestion around North Metro interchange',
+      type: 'SURGICAL_EMERGENCY',
+      severity: 'HIGH',
+      description: 'Acute Subdural Hematoma: Emergency neuro-surgical operating room prepped',
       status: 'INVESTIGATING',
     });
   } else if (zoneId === 'CENTRAL') {
     await createIncident({
       zoneId,
-      type: 'ROAD_CLOSED',
+      type: 'CARDIAC_ARREST',
       severity: 'HIGH',
-      description: 'Main Central Boulevard closed for emergency water main repair',
+      description: 'STEMI Acute Myocardial Infarction: Direct ambulance transfer to Cardiac Catheterization Lab',
       status: 'ACTIVE',
     });
     await createIncident({
       zoneId,
-      type: 'TRAFFIC_JAM',
-      severity: 'LOW',
-      description: 'Slow-moving traffic near Central Plaza shopping district',
+      type: 'RESPIRATORY_FAILURE',
+      severity: 'MEDIUM',
+      description: 'Severe Acute Respiratory Distress: Intubated in Emergency Bay 4, pending ICU transfer',
       status: 'ACTIVE',
     });
   } else if (zoneId === 'SOUTH') {
     await createIncident({
       zoneId,
-      type: 'TRAFFIC_JAM',
-      severity: 'MEDIUM',
-      description: 'Southbound bridge bottleneck due to maintenance lane closure',
+      type: 'BURN_CRITICAL',
+      severity: 'HIGH',
+      description: 'Industrial Flash Chemical Burn (35% TBSA): Admitted to Burn Intensive Care Unit',
       status: 'ACTIVE',
     });
   }
