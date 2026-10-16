@@ -7,6 +7,26 @@
     "severity": "HIGH",
     "description": "Industrial Flash Chemical Burn (35% TBSA): Admitted to Burn Intensive Care Unit",
     "timestamp": "2026-10-16T06:08:04.318Z",
-    "status": "ACTIVE"
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-SOUTH-25450-AFDC",
+    "zone_id": "SOUTH",
+    "zoneId": "SOUTH",
+    "type": "RESPIRATORY_FAILURE",
+    "severity": "HIGH",
+    "description": "MCI Mass Disaster Ambulance Wave #3: RESPIRATORY_FAILURE routed to South Memorial Hospital",
+    "timestamp": "2026-10-16T06:27:05.452Z",
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-SOUTH-25459-E120",
+    "zone_id": "SOUTH",
+    "zoneId": "SOUTH",
+    "type": "STROKE_ALERT",
+    "severity": "LOW",
+    "description": "MCI Mass Disaster Ambulance Wave #6: STROKE_ALERT routed to South Memorial Hospital",
+    "timestamp": "2026-10-16T06:27:05.460Z",
+    "status": "RESOLVED"
   }
 ]

@@ -7,7 +7,7 @@
     "severity": "HIGH",
     "description": "STEMI Acute Myocardial Infarction: Direct ambulance transfer to Cardiac Catheterization Lab",
     "timestamp": "2026-10-16T06:08:04.319Z",
-    "status": "ACTIVE"
+    "status": "RESOLVED"
   },
   {
     "id": "INC-CENTRAL-102-BF62",
@@ -17,6 +17,26 @@
     "severity": "MEDIUM",
     "description": "Severe Acute Respiratory Distress: Intubated in Emergency Bay 4, pending ICU transfer",
     "timestamp": "2026-10-16T06:08:04.322Z",
-    "status": "ACTIVE"
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-CENTRAL-25446-BC54",
+    "zone_id": "CENTRAL",
+    "zoneId": "CENTRAL",
+    "type": "CARDIAC_ARREST",
+    "severity": "HIGH",
+    "description": "MCI Mass Disaster Ambulance Wave #2: CARDIAC_ARREST routed to Central General Hospital",
+    "timestamp": "2026-10-16T06:27:05.448Z",
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-CENTRAL-25456-A620",
+    "zone_id": "CENTRAL",
+    "zoneId": "CENTRAL",
+    "type": "BURN_CRITICAL",
+    "severity": "MEDIUM",
+    "description": "MCI Mass Disaster Ambulance Wave #5: BURN_CRITICAL routed to Central General Hospital",
+    "timestamp": "2026-10-16T06:27:05.457Z",
+    "status": "RESOLVED"
   }
 ]

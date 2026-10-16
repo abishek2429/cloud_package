@@ -7,7 +7,7 @@
     "severity": "HIGH",
     "description": "Mass Casualty Highway Collision: 3 polytrauma patients admitted to Shock Trauma Bay 1",
     "timestamp": "2026-10-16T06:08:04.318Z",
-    "status": "ACTIVE"
+    "status": "RESOLVED"
   },
   {
     "id": "INC-NORTH-102-58F3",
@@ -17,6 +17,46 @@
     "severity": "HIGH",
     "description": "Acute Subdural Hematoma: Emergency neuro-surgical operating room prepped",
     "timestamp": "2026-10-16T06:08:04.321Z",
-    "status": "INVESTIGATING"
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-NORTH-778063-2905",
+    "zone_id": "NORTH",
+    "zoneId": "NORTH",
+    "type": "MASS_TRAUMA",
+    "severity": "HIGH",
+    "description": "yyeu,yeudld",
+    "timestamp": "2026-10-16T06:22:58.068Z",
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-NORTH-25442-3D71",
+    "zone_id": "NORTH",
+    "zoneId": "NORTH",
+    "type": "MASS_TRAUMA",
+    "severity": "HIGH",
+    "description": "MCI Mass Disaster Ambulance Wave #1: MASS_TRAUMA routed to North Trauma Center",
+    "timestamp": "2026-10-16T06:27:05.443Z",
+    "status": "RESOLVED"
+  },
+  {
+    "id": "INC-NORTH-25454-B01D",
+    "zone_id": "NORTH",
+    "zoneId": "NORTH",
+    "type": "SURGICAL_EMERGENCY",
+    "severity": "MEDIUM",
+    "description": "MCI Mass Disaster Ambulance Wave #4: SURGICAL_EMERGENCY routed to North Trauma Center",
+    "timestamp": "2026-10-16T06:27:05.455Z",
+    "status": "RESOLVED"
+  },
+  {
+    "id": "IDEMP-TEST-MVAL5DYK",
+    "zone_id": "NORTH",
+    "zoneId": "NORTH",
+    "type": "CARDIAC_ARREST",
+    "severity": "HIGH",
+    "description": "[Idempotency Audit Test] Deterministic Key: IDEMP-TEST-MVAL5DYK",
+    "timestamp": "2026-10-16T06:27:27.599Z",
+    "status": "RESOLVED"
   }
 ]

@@ -40,6 +40,25 @@ export default function TopologyDiagram({ nodes, systemStatus }) {
             ? `${availableBeds}/${totalBeds} ICU Beds Available • ${incidents} Patients Admitted (${latency}ms)`
             : (node?.errorMessage || 'Telemetry Connection Timed Out')}
         </div>
+
+        <div style={{ marginTop: '0.45rem', paddingTop: '0.35rem', borderTop: '1px dashed var(--border-subtle)', display: 'flex', justifyContent: 'flex-end' }}>
+          <a
+            href={`http://localhost:${defaultPort}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              color: 'var(--accent-cyan)',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.2rem'
+            }}
+          >
+            <span>Open Node Console ↗</span>
+          </a>
+        </div>
       </div>
     );
   };

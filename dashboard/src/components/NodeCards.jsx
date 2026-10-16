@@ -120,6 +120,29 @@ export default function NodeCards({ nodes, report }) {
                 {isOnline ? 'Surge Status: Accepting Patients' : 'Rerouting Ambulance Dispatch'}
               </span>
             </div>
+
+            {/* Launch Dedicated Node Console Button */}
+            <div style={{ marginTop: '0.85rem' }}>
+              <a
+                href={`http://localhost:${meta.port}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-secondary btn-sm"
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  fontSize: '0.75rem',
+                  padding: '0.45rem',
+                  textDecoration: 'none'
+                }}
+              >
+                <Hospital size={13} color="var(--accent-cyan)" />
+                <span>Launch {meta.name} Console (Port {meta.port}) ↗</span>
+              </a>
+            </div>
           </div>
         );
       })}
