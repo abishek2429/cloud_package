@@ -9,14 +9,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const pool = new Pool(config.db);
 
+let isConnected = false;
+const inMemoryZones = new Map();
+const inMemoryIncidents = new Map();
+
 pool.on('error', (err) => {
-  console.error('[DB] Unexpected error on idle client', err);
+  console.warn('[DB] PostgreSQL pool error (falling back to memory):', err.message);
+  isConnected = false;
 });
 
 /**
- * Retries connecting to the database with exponential backoff on startup
+ * Checks if PostgreSQL is currently connected and active
  */
-export async function initializeDatabaseWithRetry(maxAttempts = 15, delayMs = 2000) {
+export function isPostgresConnected() {
+  return isConnected;
+}
+
+/**
+ * Tries connecting to PostgreSQL with retry; if unreachable, falls back to in-memory mode without crashing
+ */
+export async function initializeDatabaseWithRetry(maxAttempts = 3, delayMs = 1500) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const client = await pool.connect();
@@ -30,114 +42,227 @@ export async function initializeDatabaseWithRetry(maxAttempts = 15, delayMs = 20
           await client.query(sql);
           console.log('[DB] Schema verified and applied successfully.');
         }
-        return;
+        isConnected = true;
+        return true;
       } finally {
         client.release();
       }
     } catch (err) {
-      console.warn(`[DB] Database connection attempt ${attempt}/${maxAttempts} failed: ${err.message}. Retrying in ${delayMs}ms...`);
-      if (attempt === maxAttempts) {
-        throw new Error(`Failed to connect to database after ${maxAttempts} attempts: ${err.message}`);
+      console.warn(`[DB] PostgreSQL connection attempt ${attempt}/${maxAttempts} notice: ${err.message}`);
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
+
+  // Graceful fallback to in-memory autonomous mode
+  console.warn(
+    `[DB] ⚠️ PostgreSQL is currently unreachable. Node [${config.zoneId}] is running in Autonomous In-Memory Mode. ` +
+    `Hospital node remains 100% ONLINE. Retrying DB in background...`
+  );
+  isConnected = false;
+
+  // Background reconnect loop
+  const reconnectTimer = setInterval(async () => {
+    if (isConnected) {
+      clearInterval(reconnectTimer);
+      return;
+    }
+    try {
+      const client = await pool.connect();
+      try {
+        const schemaPath = path.join(__dirname, 'schema.sql');
+        if (fs.existsSync(schemaPath)) {
+          const sql = fs.readFileSync(schemaPath, 'utf8');
+          await client.query(sql);
+        }
+        isConnected = true;
+        console.log(`[DB] ✅ Background reconnect to PostgreSQL succeeded for zone [${config.zoneId}].`);
+        clearInterval(reconnectTimer);
+      } finally {
+        client.release();
+      }
+    } catch {
+      // Quietly wait for next retry
+    }
+  }, 10000);
+  reconnectTimer.unref();
+
+  return false;
 }
 
 /**
  * Ensures the zone record exists in the zones table
  */
 export async function ensureZoneExists(zoneId, zoneName) {
-  const query = `
-    INSERT INTO zones (zone_id, zone_name)
-    VALUES ($1, $2)
-    ON CONFLICT (zone_id) DO UPDATE SET zone_name = $2
-  `;
-  await pool.query(query, [zoneId, zoneName]);
+  inMemoryZones.set(zoneId, { zone_id: zoneId, zone_name: zoneName });
+  if (!isConnected) return;
+  try {
+    const query = `
+      INSERT INTO zones (zone_id, zone_name)
+      VALUES ($1, $2)
+      ON CONFLICT (zone_id) DO UPDATE SET zone_name = $2
+    `;
+    await pool.query(query, [zoneId, zoneName]);
+  } catch (err) {
+    console.warn(`[DB] ensureZoneExists fallback: ${err.message}`);
+  }
 }
 
 /**
  * Counts incidents for a given zone
  */
 export async function countIncidentsByZone(zoneId) {
-  const res = await pool.query('SELECT COUNT(*) FROM incidents WHERE zone_id = $1', [zoneId]);
-  return parseInt(res.rows[0].count, 10);
+  if (isConnected) {
+    try {
+      const res = await pool.query('SELECT COUNT(*) FROM incidents WHERE zone_id = $1', [zoneId]);
+      return parseInt(res.rows[0].count, 10);
+    } catch (err) {
+      console.warn(`[DB] countIncidentsByZone fallback: ${err.message}`);
+    }
+  }
+  let count = 0;
+  for (const inc of inMemoryIncidents.values()) {
+    if (inc.zoneId === zoneId || inc.zone_id === zoneId) count++;
+  }
+  return count;
 }
 
 /**
  * Finds an incident by ID
  */
 export async function findIncidentById(id) {
-  const res = await pool.query('SELECT * FROM incidents WHERE id = $1', [id]);
-  return res.rows[0] ? mapRowToIncident(res.rows[0]) : null;
+  if (isConnected) {
+    try {
+      const res = await pool.query('SELECT * FROM incidents WHERE id = $1', [id]);
+      if (res.rows[0]) return mapRowToIncident(res.rows[0]);
+    } catch (err) {
+      console.warn(`[DB] findIncidentById fallback: ${err.message}`);
+    }
+  }
+  const mem = inMemoryIncidents.get(id);
+  return mem ? mapRowToIncident(mem) : null;
 }
 
 /**
  * Lists incidents for a zone with optional severity and status filtering
  */
 export async function listIncidents(zoneId, { severity, status } = {}) {
-  let query = 'SELECT * FROM incidents WHERE zone_id = $1';
-  const params = [zoneId];
-  let paramIdx = 2;
+  if (isConnected) {
+    try {
+      let query = 'SELECT * FROM incidents WHERE zone_id = $1';
+      const params = [zoneId];
+      let paramIdx = 2;
 
-  if (severity) {
-    query += ` AND severity = $${paramIdx++}`;
-    params.push(severity.toUpperCase());
+      if (severity) {
+        query += ` AND severity = $${paramIdx++}`;
+        params.push(severity.toUpperCase());
+      }
+
+      if (status) {
+        query += ` AND status = $${paramIdx++}`;
+        params.push(status.toUpperCase());
+      }
+
+      query += ' ORDER BY timestamp DESC';
+      const res = await pool.query(query, params);
+      return res.rows.map(mapRowToIncident);
+    } catch (err) {
+      console.warn(`[DB] listIncidents fallback: ${err.message}`);
+    }
   }
 
-  if (status) {
-    query += ` AND status = $${paramIdx++}`;
-    params.push(status.toUpperCase());
+  // In-memory filter
+  let results = [];
+  for (const inc of inMemoryIncidents.values()) {
+    const incZone = inc.zoneId || inc.zone_id;
+    if (incZone === zoneId) {
+      if (severity && inc.severity?.toUpperCase() !== severity.toUpperCase()) continue;
+      if (status && inc.status?.toUpperCase() !== status.toUpperCase()) continue;
+      results.push(mapRowToIncident(inc));
+    }
   }
-
-  query += ' ORDER BY timestamp DESC';
-  const res = await pool.query(query, params);
-  return res.rows.map(mapRowToIncident);
+  results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return results;
 }
 
 /**
  * Inserts a new incident record
  */
 export async function insertIncident({ id, zoneId, type, severity, description, timestamp, status }) {
-  const query = `
-    INSERT INTO incidents (id, zone_id, type, severity, description, timestamp, status)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-    RETURNING *
-  `;
-  const res = await pool.query(query, [
+  const incidentObj = {
     id,
+    zone_id: zoneId,
     zoneId,
-    type.toUpperCase(),
-    severity.toUpperCase(),
+    type: type.toUpperCase(),
+    severity: severity.toUpperCase(),
     description,
-    timestamp || new Date().toISOString(),
-    status ? status.toUpperCase() : 'ACTIVE',
-  ]);
-  return mapRowToIncident(res.rows[0]);
+    timestamp: timestamp || new Date().toISOString(),
+    status: status ? status.toUpperCase() : 'ACTIVE',
+  };
+
+  inMemoryIncidents.set(id, incidentObj);
+
+  if (isConnected) {
+    try {
+      const query = `
+        INSERT INTO incidents (id, zone_id, type, severity, description, timestamp, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+      `;
+      const res = await pool.query(query, [
+        id,
+        zoneId,
+        type.toUpperCase(),
+        severity.toUpperCase(),
+        description,
+        incidentObj.timestamp,
+        incidentObj.status,
+      ]);
+      return mapRowToIncident(res.rows[0]);
+    } catch (err) {
+      console.warn(`[DB] insertIncident fallback: ${err.message}`);
+    }
+  }
+
+  return mapRowToIncident(incidentObj);
 }
 
 /**
  * Updates status of an existing incident
  */
 export async function updateIncidentStatus(id, newStatus) {
-  const query = `
-    UPDATE incidents
-    SET status = $1
-    WHERE id = $2
-    RETURNING *
-  `;
-  const res = await pool.query(query, [newStatus.toUpperCase(), id]);
-  return res.rows[0] ? mapRowToIncident(res.rows[0]) : null;
+  const mem = inMemoryIncidents.get(id);
+  if (mem) {
+    mem.status = newStatus.toUpperCase();
+  }
+
+  if (isConnected) {
+    try {
+      const query = `
+        UPDATE incidents
+        SET status = $1
+        WHERE id = $2
+        RETURNING *
+      `;
+      const res = await pool.query(query, [newStatus.toUpperCase(), id]);
+      if (res.rows[0]) return mapRowToIncident(res.rows[0]);
+    } catch (err) {
+      console.warn(`[DB] updateIncidentStatus fallback: ${err.message}`);
+    }
+  }
+
+  return mem ? mapRowToIncident(mem) : null;
 }
 
 function mapRowToIncident(row) {
   return {
     id: row.id,
-    zoneId: row.zone_id,
+    zoneId: row.zone_id || row.zoneId,
     type: row.type,
     severity: row.severity,
     description: row.description,
-    timestamp: row.timestamp instanceof Date ? row.timestamp.toISOString() : row.timestamp,
+    timestamp: row.timestamp instanceof Date ? row.timestamp.toISOString() : (row.timestamp || new Date().toISOString()),
     status: row.status,
   };
 }

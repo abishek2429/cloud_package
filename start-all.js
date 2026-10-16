@@ -21,6 +21,7 @@ console.log(`🗄️ Database: ${dbUrl ? 'Configured (DATABASE_URL detected)' : 
 console.log('================================================================');
 
 const children = [];
+let isShuttingDown = false;
 
 function startProcess(name, scriptRelativePath, envVars = {}) {
   const fullPath = path.join(__dirname, scriptRelativePath);
@@ -39,6 +40,14 @@ function startProcess(name, scriptRelativePath, envVars = {}) {
 
   child.on('exit', (code, signal) => {
     console.log(`⚠️ [${name}] Process exited (Code: ${code}, Signal: ${signal})`);
+    if (!isShuttingDown) {
+      console.log(`🔄 [Supervisor] Automatically respawning [${name}] in 2000ms...`);
+      setTimeout(() => {
+        if (!isShuttingDown) {
+          startProcess(name, scriptRelativePath, envVars);
+        }
+      }, 2000);
+    }
   });
 
   children.push({ name, process: child });
@@ -85,6 +94,7 @@ setTimeout(() => {
 
 // Graceful shutdown handling
 function handleShutdown(signal) {
+  isShuttingDown = true;
   console.log(`\n🛑 Received ${signal}. Terminating all cluster nodes...`);
   children.forEach(({ name, process }) => {
     try {
